@@ -6,7 +6,7 @@ import "math/big"
 type WalletAccount struct {
 	WalletAddress          string   `json:"wallet_address"`
 	Email                  string   `json:"email"`
-	Password               string   `json:"password"`
+	Password               string   `json:"password,omitempty"`
 	SmartContractAddresses []string `json:"smart_contract_addresses"`
 	CreditsAvailable       *big.Int `json:"credits_available"`
 	ApiKey                 string   `json:"api_key"`

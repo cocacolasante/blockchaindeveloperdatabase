@@ -70,21 +70,30 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
 	defer cancel()
 
 
-	query := `SELECT wallet_address,  credits_available, api_key
-			FROM walletaccounts
-			WHERE wallet_address = $1; `
+	query := ` SELECT
+            wallet_address,
+            credits_available,
+			email,
+            api_key,
+            COALESCE(smart_contract_addresses, '{}'::VARCHAR[]) AS smart_contract_addresses
+        FROM walletaccounts
+        WHERE wallet_address = $1; `
 
 	var wallet models.WalletAccount
-
+	var smartContractsStr string 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
+		&wallet.Email,
 		&wallet.ApiKey,
+		&smartContractsStr,
 	)
 
 	if err != nil {
 		return nil, err
 	}
+
+	wallet.SmartContractAddresses = append(wallet.SmartContractAddresses, smartContractsStr)
 
 	return &wallet, err
 }
@@ -104,4 +113,19 @@ func(db *PostgresDb) UpdateAPIKey(address, key string) (string, error) {
 	return newKey, nil
 
 
+}
+
+
+func(db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract) (error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `INSERT INTO smartcontracts (address, project_name, abi, deployer_wallet, description, state_variables) values($1, $2, $3, $4, $5,$6);`
+
+	_, err := db.Db.ExecContext(ctx, stmt, contract.Address, contract.ProjectName, contract.Abi, contract.DeployerWallet, contract.Description,contract.StateVariables )
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
