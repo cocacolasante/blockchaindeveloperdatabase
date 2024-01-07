@@ -21,7 +21,7 @@ func (app *Application) EnableCORS(h http.Handler) http.Handler {
 
 func (app *Application) authRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		
+		// create auth middleware to check api key hash against database
 		next.ServeHTTP(w, r)
 	})
 }

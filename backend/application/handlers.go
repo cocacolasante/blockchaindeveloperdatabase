@@ -3,6 +3,7 @@ package application
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
@@ -10,11 +11,12 @@ import (
 )
 
 func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid method", http.StatusBadRequest)
 		return
 	}
+
+	// add in a password hash field
 
 	var input models.WalletAccount
 	err := app.ReadJSON(w, r, &input)
@@ -25,13 +27,33 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	apikey, err := app.DB.AddWalletToDb(input.WalletAddress)
+	existing, err := app.DB.GetWalletByAddress(input.WalletAddress)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	if existing.WalletAddress != ""{
+		app.ErrorJSON(w, errors.New("account already created in database"))
+		return
+	}
+	isValidated := app.ValidateSignUp(&input)
+	if !isValidated {
+		app.ErrorJSON(w, errors.New("missing fields in sign up creation"))
+		return
+	}
+	hasPass := app.HashPassword(input.Password)
+	log.Println(hasPass)
+	// add wallet to db returns the new users api key to access api 
+	apikey, err := app.DB.AddWalletToDb(input.WalletAddress, input.Email, hasPass)
 	if err != nil {
 		app.ErrorLog.Println(err)
 		app.ErrorJSON(w, err)
 		return
 	}
 	input.ApiKey = apikey
+	input.Password = hasPass
 	
 	err = app.writeJSON(w, http.StatusAccepted, input)
 	if err != nil {

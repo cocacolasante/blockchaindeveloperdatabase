@@ -43,7 +43,6 @@ contract Credits is ERC20 {
     }
 
     // getter functions
-
     function owner() public view returns(address){
         return _owner;
     }

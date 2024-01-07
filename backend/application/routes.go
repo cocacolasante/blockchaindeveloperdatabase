@@ -16,7 +16,11 @@ func (app *Application) Routes() http.Handler {
 
 	mux.Get("/wallet/{address}", app.GetWalletAccount)
 
+	// how to protect/auth signup so randoms cant create accounts for other users wallet addresses
 	mux.Post("/signup", app.CreateWalletAccount)
+	// mux.Post("/login", )
+
+	// mux.Post("/refreshapikey", )
 
 	return mux
 }

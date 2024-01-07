@@ -2,10 +2,14 @@ package application
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
+
+	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
 )
 
 type JSONResponse struct {
@@ -49,7 +53,7 @@ func (app *Application) ReadJSON(w http.ResponseWriter, r *http.Request, data in
 		app.ErrorLog.Println("Unexpected data in request body:", err)
 		return err
 	}
-	
+
 	var extraData struct{}
 	err = dec.Decode(&extraData)
 	if err != io.EOF {
@@ -96,4 +100,17 @@ func (app *Application) ErrorJSON(w http.ResponseWriter, err error, status ...in
 	payload.Message = err.Error()
 
 	return app.writeJSON(w, statusCode, payload)
+}
+
+func (app *Application) HashPassword(password string) string {
+	passHash := sha256.Sum256([]byte(password))
+	return hex.EncodeToString(passHash[:])
+}
+
+func (app *Application) ValidateSignUp(input *models.WalletAccount) bool {
+	if input.Email == "" || input.Password == "" {
+		return false
+	}
+
+	return true
 }

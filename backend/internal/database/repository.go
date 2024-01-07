@@ -8,6 +8,6 @@ import (
 
 type DatabaseRepo interface {
 	Connection() *sql.DB
-	AddWalletToDb(address string) (string, error)
+	AddWalletToDb(address, email, password string) (string, error)
 	GetWalletByAddress(address string) (*models.WalletAccount, error)
 }

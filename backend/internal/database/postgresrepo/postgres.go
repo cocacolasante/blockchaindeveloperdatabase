@@ -3,6 +3,7 @@ package postgresrepo
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 
@@ -20,15 +21,15 @@ func (m *PostgresDb) Connection() *sql.DB {
 	return m.Db
 }
 
-func (db *PostgresDb) AddWalletToDb(address string) (string, error) {
+func (db *PostgresDb) AddWalletToDb(address, email, password string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	apikey := tools.GenerateApiKey()
 
-	stmt := `insert into walletaccounts (wallet_address, api_key ) values ($1, $2)`
+	stmt := `insert into walletaccounts (wallet_address, api_key, email, password ) values ($1, $2, $3, $4)`
 
-	_, err := db.Db.ExecContext(ctx, stmt, address, apikey)
+	_, err := db.Db.ExecContext(ctx, stmt, address, apikey, email, password)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -43,7 +44,7 @@ func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount,
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `SELECT wallet_address, credits_available 
+	query := `SELECT wallet_address, credits_available, email 
 			FROM walletaccounts
 			WHERE wallet_address =  $1; `
 
@@ -52,7 +53,11 @@ func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount,
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
+		&wallet.Email,
 	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return &models.WalletAccount{}, nil
+	}
 	if err != nil {
 		return nil, err
 	}
