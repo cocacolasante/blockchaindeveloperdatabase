@@ -1,6 +1,9 @@
 package application
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+)
 
 func (app *Application) EnableCORS(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +24,18 @@ func (app *Application) EnableCORS(h http.Handler) http.Handler {
 
 func (app *Application) authRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// create auth middleware to check api key hash against database
+		
+		isVerified, err := app.VerifyHeaders(w, r)
+		if err != nil {
+			app.ErrorJSON(w, err)
+			return
+		}
+		app.InfoLog.Println("isVerified in middleware", isVerified)
+		if !isVerified {
+			app.ErrorJSON(w, errors.New("unauthenticated"), http.StatusBadRequest)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

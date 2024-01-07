@@ -8,8 +8,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
+	"github.com/go-chi/chi/v5"
 )
 
 type JSONResponse struct {
@@ -113,4 +115,55 @@ func (app *Application) ValidateSignUp(input *models.WalletAccount) bool {
 	}
 
 	return true
+}
+
+func (app *Application) VerifyHeaders(w http.ResponseWriter, r *http.Request) (bool, error) {
+	isVerified := false
+	w.Header().Add("Vary", "Authorization")
+
+	// get auth header
+	authHeader := r.Header.Get("Authorization")
+
+	// sanity check
+	if authHeader == "" {
+		return isVerified, errors.New("no auth header")
+	}
+
+	headerParts := strings.Split(authHeader, " ")
+	if len(headerParts) != 2 {
+		return isVerified, errors.New("invalid auth header")
+	}
+
+	// check to see if we have the word Bearer
+	if headerParts[0] != "Bearer" {
+		return isVerified, errors.New("invalid auth header")
+	}
+
+	token := headerParts[1]
+
+	id := chi.URLParam(r, "address")
+	
+	matches, err := app.CheckIfApiMatchesDatabase(id, token)
+	if err != nil {
+		return isVerified, err
+	}
+	app.InfoLog.Println("middleware utils auth api match:", matches)
+	if matches{
+		isVerified = true
+	}
+
+	return isVerified, nil
+}
+
+
+func(app *Application) CheckIfApiMatchesDatabase(walletAddress, key string) (bool, error) {
+	wallet, err := app.DB.AdminGetWalletAccount(walletAddress) 
+	app.InfoLog.Println("check if api matches: ",wallet)
+	if err != nil {
+		return false, err
+	}
+	if key != wallet.ApiKey {
+		return false, errors.New("invalid auth credentials")
+	}
+	return true, nil
 }

@@ -65,11 +65,12 @@ func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount,
 	return &wallet, err
 
 }
-func (db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount, error) {
+func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `SELECT (wallet_address, COALESCE(smart_contract_addresses, []), credits_available, api_key )
+
+	query := `SELECT wallet_address,  credits_available, api_key
 			FROM walletaccounts
 			WHERE wallet_address = $1; `
 
@@ -77,7 +78,6 @@ func (db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount
 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&wallet.WalletAddress,
-		&wallet.SmartContractAddresses,
 		&wallet.CreditsAvailable,
 		&wallet.ApiKey,
 	)
@@ -87,4 +87,21 @@ func (db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount
 	}
 
 	return &wallet, err
+}
+
+
+func(db *PostgresDb) UpdateAPIKey(address, key string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `UPDATE walletaccounts SET api_key = $1 WHERE wallet_address = $2 returning api_key`
+
+	var newKey string
+	err := db.Db.QueryRowContext(ctx, stmt, key, address).Scan(&newKey)
+	if err != nil {
+		return "", err
+	}
+	return newKey, nil
+
+
 }

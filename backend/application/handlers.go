@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
+	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/tools"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -90,6 +91,44 @@ func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(out)
+
+}
+
+
+
+
+
+
+// AUTHENTICATED HANDLERS
+
+func (app *Application) RefreshApiKey(w http.ResponseWriter, r *http.Request) {
+	app.InfoLog.Println("hit")
+	if r.Method != http.MethodGet{
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+	
+	id := chi.URLParam(r, "address")
+	newApiKey := tools.GenerateApiKey()
+	newKey, err := app.DB.UpdateAPIKey(id, newApiKey)
+	if err != nil {
+		app.ErrorJSON(w, err, http.StatusBadGateway)
+		return
+	}
+	
+	wallet := models.WalletAccount{
+		WalletAddress: id,
+		ApiKey: newKey,
+	}
+
+	out, err := json.Marshal(wallet)
+	if err != nil {
+		app.ErrorJSON(w, err, http.StatusBadGateway)
+		return
+	}
+
 	w.WriteHeader(http.StatusAccepted)
 	w.Write(out)
 
