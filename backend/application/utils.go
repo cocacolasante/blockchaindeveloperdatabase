@@ -43,20 +43,18 @@ func (app *Application) ReadJSON(w http.ResponseWriter, r *http.Request, data in
 	dec := json.NewDecoder(r.Body)
 
 	dec.DisallowUnknownFields()
-
+	app.InfoLog.Println("hit in read json")
 	err := dec.Decode(data)
 	if err != nil {
 		app.ErrorLog.Println("Unexpected data in request body:", err)
 		return err
 	}
-
-	err = dec.Decode(&struct{}{})
+	
+	var extraData struct{}
+	err = dec.Decode(&extraData)
 	if err != io.EOF {
 		app.ErrorLog.Println("Unexpected data in request body:", err)
-		return errors.New("Body must only contain single json value")
-	}
-	if err != nil {
-		return nil
+		return errors.New("Body must only contain a single JSON value")
 	}
 
 	return nil

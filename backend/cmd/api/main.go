@@ -46,7 +46,7 @@ func main() {
 	app.Web3.Client = web3Conn
 	defer app.Web3.Client.Close()
 	app.InfoLog.Println("connected to blockchain")
-	
+
 	app.InfoLog.Printf("Application configured\n")
 	app.InfoLog.Printf("starting application\n")
 	app.Start()

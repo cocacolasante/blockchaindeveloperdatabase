@@ -14,6 +14,8 @@ func (app *Application) Routes() http.Handler {
 	mux.Use(middleware.Logger)
 	// mux.Use(app.EnableCORS)
 
+	mux.Get("/wallet/{address}", app.GetWalletAccount)
+
 	mux.Post("/signup", app.CreateWalletAccount)
 
 	return mux
