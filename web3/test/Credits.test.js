@@ -52,5 +52,30 @@ describe("Credits Contract", () =>{
                 expect(await CreditContract.balanceOf(user1.address)).to.equal(10)
             })
         })
+        describe("Failure", () =>{
+            it("expect revert when called by user 1", async () =>{
+                await expect(CreditContract.connect(user1).mintToAddress(user1.address, 10)).to.be.reverted
+            })
+        })
+    })
+    describe("Redeem Token", () =>{
+        describe("Success", () =>{
+            beforeEach(async () =>{
+                await CreditContract.connect(deployer).mintToAddress(user1.address, 10)
+                await CreditContract.connect(deployer).redeemCredits(user1.address, 5)
+            })
+            it("expects user1 balance to equal 5", async () =>{
+                expect(await CreditContract.balanceOf(user1.address)).to.equal(5)
+            })
+            it("checks redeem count = 5", async () =>{
+                expect(await CreditContract.usersRedeemed(user1.address)).to.equal(5)
+            })
+        })
+        describe("Failure", () =>{
+            it("expects revery when non owner calls", async () =>{
+                await CreditContract.connect(deployer).mintToAddress(user1.address, 10)
+                await expect(CreditContract.connect(user1).redeemCredits(user1.address,5)).to.be.reverted
+            })
+        })
     })
 })

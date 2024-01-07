@@ -7,12 +7,15 @@ contract Credits is ERC20 {
     address private _owner;
     uint private _tokenPrice;
 
+    mapping(address=>uint) private _usersRedeemed;
+
     event TokensRedeemed(address indexed redeemer, uint indexed amount);
 
     modifier onlyOwner {
         require(msg.sender == _owner, "CREDITS: only owner function");
         _;
     }
+    
     constructor(string memory _name, string memory _symbol, uint tp) ERC20(_name, _symbol){
         _owner = msg.sender;
         _tokenPrice = tp;
@@ -34,14 +37,10 @@ contract Credits is ERC20 {
     // when users make redeem request, api request initiates the burn call from the owner wallet
     // tokens burned to redeem
     function redeemCredits( address target, uint amount) public onlyOwner(){
+        _usersRedeemed[target] += amount;
         _burn(target, amount);
         emit TokensRedeemed(target, amount);
     }
-
-    // CREATE A HELPER FUNCTION TO UPDATE TOKEN PRICE WHENEVER MINTING FUNCTION IS CALLED
-
-
-
 
     // getter functions
 
@@ -54,5 +53,9 @@ contract Credits is ERC20 {
 
     function getContractBalance()public view onlyOwner returns(uint){
         return address(this).balance;
+    }
+
+    function usersRedeemed(address user) public view returns(uint) {
+        return _usersRedeemed[user];
     }
 }
