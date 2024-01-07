@@ -32,7 +32,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	input.ApiKey = apikey
-	app.InfoLog.Println("hit in create wallet json")
+	
 	err = app.writeJSON(w, http.StatusAccepted, input)
 	if err != nil {
 		// Handle error writing JSON
@@ -48,13 +48,18 @@ func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request)
 
 	address := chi.URLParam(r, "address")
 	app.InfoLog.Println(address)
-	
+
 	wallet, err := app.DB.GetWalletByAddress(address)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
-	app.InfoLog.Println(wallet)
+	currentCredits, err := app.Web3.GetRemainingCredits(wallet.WalletAddress)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	wallet.CreditsAvailable = currentCredits
 
 	out, err := json.Marshal(wallet)
 	if err != nil {

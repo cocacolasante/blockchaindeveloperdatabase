@@ -26,9 +26,9 @@ func (db *PostgresDb) AddWalletToDb(address string) (string, error) {
 
 	apikey := tools.GenerateApiKey()
 
-	stmt := `insert into walletaccounts (wallet_address, credits_available, api_key ) values ($1, $2, $3)`
+	stmt := `insert into walletaccounts (wallet_address, api_key ) values ($1, $2)`
 
-	_, err := db.Db.ExecContext(ctx, stmt, address, 0, apikey)
+	_, err := db.Db.ExecContext(ctx, stmt, address, apikey)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -38,15 +38,15 @@ func (db *PostgresDb) AddWalletToDb(address string) (string, error) {
 
 }
 
-func(db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount, error){
+func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount, error) {
 	log.Println("db call hit")
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
-	
+
 	query := `SELECT wallet_address, credits_available 
 			FROM walletaccounts
 			WHERE wallet_address =  $1; `
-	
+
 	var wallet models.WalletAccount
 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
@@ -60,14 +60,14 @@ func(db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount, 
 	return &wallet, err
 
 }
-func(db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount, error){
+func (db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	query := `SELECT (wallet_address, COALESCE(smart_contract_addresses, []), credits_available, api_key )
 			FROM walletaccounts
 			WHERE wallet_address = $1; `
-	
+
 	var wallet models.WalletAccount
 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
