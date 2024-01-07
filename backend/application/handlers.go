@@ -47,7 +47,8 @@ func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request)
 	}
 
 	address := chi.URLParam(r, "address")
-
+	app.InfoLog.Println(address)
+	
 	wallet, err := app.DB.GetWalletByAddress(address)
 	if err != nil {
 		app.ErrorJSON(w, err)
@@ -62,6 +63,7 @@ func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
 	w.Write(out)
 
 }

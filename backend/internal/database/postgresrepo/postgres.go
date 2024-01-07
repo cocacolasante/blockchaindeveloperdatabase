@@ -47,7 +47,7 @@ func(db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount, 
 			FROM walletaccounts
 			WHERE wallet_address =  $1; `
 	
-	var wallet *models.WalletAccount
+	var wallet models.WalletAccount
 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&wallet.WalletAddress,
@@ -57,7 +57,7 @@ func(db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount, 
 		return nil, err
 	}
 
-	return wallet, err
+	return &wallet, err
 
 }
 func(db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount, error){
@@ -68,7 +68,7 @@ func(db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount,
 			FROM walletaccounts
 			WHERE wallet_address = $1; `
 	
-	var wallet *models.WalletAccount
+	var wallet models.WalletAccount
 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&wallet.WalletAddress,
@@ -81,5 +81,5 @@ func(db *PostgresDb) AuthWalletByAddress(address string) (*models.WalletAccount,
 		return nil, err
 	}
 
-	return wallet, err
+	return &wallet, err
 }
