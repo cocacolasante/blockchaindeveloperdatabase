@@ -173,6 +173,7 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		app.ErrorJSON(w, errors.New("insufficient balance"))
 		return
 	}
+	app.InfoLog.Println("users balance:",balance)
 	// @todo DEBIT A CREDIT TOKEN BY CALLING REDEEM TOKEN FROM THE SMART CONTRACT AS AN ADMIN
 	
 
@@ -300,15 +301,16 @@ func (app *Application) UpdateSmartContract(w http.ResponseWriter, r *http.Reque
 
 // test @todo
 func (app *Application) DeleteSmartContract(w http.ResponseWriter, r *http.Request) {
-
+	app.InfoLog.Println("hit")
 	if r.Method != http.MethodDelete {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
 	}
-	id := chi.URLParam(r, "contractaddress")
+	connAdd := chi.URLParam(r, "contractaddress")
 	userAddress := chi.URLParam(r, "id")
-	err := app.DB.DeleteSmartContract(id, userAddress)
+	err := app.DB.DeleteSmartContract(connAdd, userAddress)
 	if err != nil {
+		app.ErrorLog.Println(err)
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
 	}

@@ -180,8 +180,8 @@ func(db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract, 
 
 	// @todo finish the insert query to insert sc address into the walletaccounts smart_contract_addresses array
 	stmt = `UPDATE walletaccounts
-			SET smart_contract_addresses = smart_contract_addresses || $1
-			WHERE wallet_address = $2;`
+	SET smart_contract_addresses = smart_contract_addresses || ARRAY[$1]
+	WHERE wallet_address = $2;`
 
 	_, err = db.Db.ExecContext(ctx, stmt, contract.Address, id)
 	if err != nil {
@@ -216,11 +216,19 @@ func(db *PostgresDb) DeleteSmartContract(address, userAddress string) (error){
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	stmt := `delete from smartcontract where address =$1`
+	stmt := `delete from smartcontracts where address =$1;`
 	_, err := db.Db.ExecContext(ctx, stmt, address)
 	if err != nil {
 		return err
 	}
-	stmt = `delete from `
+	stmt = `UPDATE walletaccounts
+		SET smart_contract_addresses = array_remove(smart_contract_addresses, $1)
+		WHERE wallet_address = $2;
+	`
+	_, err = db.Db.ExecContext(ctx, stmt, address, userAddress)
+	if err != nil {
+		return err
+	}
+	
 	return nil
 }
