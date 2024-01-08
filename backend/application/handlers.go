@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math/big"
 	"net/http"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
@@ -161,20 +162,32 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
 	}
+	id := chi.URLParam(r, "address")
+	// @todo MAKE CALL TO SMART CONTRACT TO VERIFY CREDITS WITH WALLET
+	balance, err := app.Web3.GetRemainingCredits(id)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	if balance == big.NewInt(0) {
+		app.ErrorJSON(w, errors.New("insufficient balance"))
+		return
+	}
+	// @todo DEBIT A CREDIT TOKEN BY CALLING REDEEM TOKEN FROM THE SMART CONTRACT AS AN ADMIN
+	
 
 	var smartContract models.SmartContract
-	err := app.ReadJSON(w, r, &smartContract)
+	err = app.ReadJSON(w, r, &smartContract)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
 	if smartContract.DeployerWallet == "" {
-		id := chi.URLParam(r, "address")
 		smartContract.DeployerWallet = id
 	}
 	app.InfoLog.Println("smart contract from request", smartContract)
 
-	err = app.DB.AddSmartContractToAccountDb(smartContract)
+	err = app.DB.AddSmartContractToAccountDb(smartContract, id)
 
 	if err != nil {
 		app.ErrorJSON(w, err)
@@ -182,12 +195,12 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	
+
 	var jsonPayload = struct {
-		Message string `json:"message"`
+		Message       string               `json:"message"`
 		SmartContract models.SmartContract `json:"smart_contract"`
 	}{
-		Message: "Successfully Added To Database",
+		Message:       "Successfully Added To Database",
 		SmartContract: smartContract,
 	}
 	out, err := json.Marshal(jsonPayload)
@@ -199,7 +212,7 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 }
 
 // GET SMART CONTRACT FROM DATABASE BY ADDRESS
-func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request){
+func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request) {
 	app.InfoLog.Println("hit in get contract")
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
@@ -207,7 +220,7 @@ func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request)
 	}
 
 	conAddress := chi.URLParam(r, "contractaddress")
-	if conAddress == ""{
+	if conAddress == "" {
 		app.ErrorJSON(w, errors.New("no contract address in url"))
 	}
 	app.InfoLog.Println("hit in get contract for address: " + conAddress)
@@ -217,20 +230,20 @@ func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request)
 		app.ErrorJSON(w, err)
 		return
 	}
-	
+
 	out, err := json.Marshal(smartContract)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
 }
 
-func (app *Application) UpdateSmartContract(w http.ResponseWriter, r *http.Request){
-	app.InfoLog.Println("hit in update contract")
+func (app *Application) UpdateSmartContract(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPatch {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
@@ -240,49 +253,101 @@ func (app *Application) UpdateSmartContract(w http.ResponseWriter, r *http.Reque
 	err := app.ReadJSON(w, r, &input)
 	if err != nil {
 		app.ErrorJSON(w, err)
-		return 
+		return
 	}
 
 	currentInDb, err := app.DB.GetSmartContract(id)
 	if err != nil {
 		app.ErrorJSON(w, err)
-		return 
+		return
 	}
-	if input.Description != ""{
+	if input.Description != "" {
 		currentInDb.Description = input.Description
 	}
 	if input.Abi != nil {
 		currentInDb.Abi = input.Abi
 	}
 	if len(input.StateVariables) > 0 {
-		currentInDb.StateVariables =input.StateVariables
+		currentInDb.StateVariables = input.StateVariables
 	}
 	if input.ProjectName != "" {
 		currentInDb.ProjectName = input.ProjectName
 	}
 
-	
 	// send call to update in db
 	err = app.DB.UpdateSmartContractToAccountDb(id, *currentInDb)
 	if err != nil {
 		app.ErrorJSON(w, err)
-		return 
+		return
 	}
-	
+
 	var successPayload = struct {
-		Message string `json:"message"`
+		Message       string `json:"message"`
 		SmartContract models.SmartContract
 	}{
-		Message: "Successfully updated contract",
+		Message:       "Successfully updated contract",
 		SmartContract: *currentInDb,
 	}
 	out, err := json.Marshal(successPayload)
 	if err != nil {
 		app.ErrorJSON(w, err)
-		return 
+		return
 	}
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
 }
 
+// test @todo
+func (app *Application) DeleteSmartContract(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodDelete {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+	id := chi.URLParam(r, "contractaddress")
+	userAddress := chi.URLParam(r, "id")
+	err := app.DB.DeleteSmartContract(id, userAddress)
+	if err != nil {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+
+	var successPayload = struct {
+		Message       string `json:"message"`
+		SmartContract models.SmartContract
+	}{
+		Message: "Successfully deleted contract",
+	}
+	out, err := json.Marshal(successPayload)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
+}
+
+func (app *Application) GetAllSmartContractsByAddress(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+
+	userId := chi.URLParam(r, "id")
+	contracts, err := app.DB.GetAllSmartContract(userId)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	out, err := json.Marshal(contracts)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
+
+}

@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"os"
 
-	ierc20 "github.com/cocacolasante/blockchaindeveloperdatabase/smartcontractinterfaces"
+	credits "github.com/cocacolasante/blockchaindeveloperdatabase/smartcontractinterfaces"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -40,7 +40,7 @@ func (w *Web3Connect) GetRemainingCredits(address string) (*big.Int, error) {
 	account := common.HexToAddress(address)
 	contractstring := os.Getenv("CREDIT_CONTRACT")
 	contAdd := common.HexToAddress(contractstring)
-	instance, err := ierc20.NewIerc20(contAdd, w.Client)
+	instance, err := credits.NewCredits(contAdd, w.Client)
 	if err != nil {
 		return nil, err
 
@@ -54,3 +54,6 @@ func (w *Web3Connect) GetRemainingCredits(address string) (*big.Int, error) {
 	return remainingCredits, nil
 
 }
+
+
+// func(w *Web3Connect) RedeemCredits

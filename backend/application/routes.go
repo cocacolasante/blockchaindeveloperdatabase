@@ -32,6 +32,9 @@ func (app *Application) Routes() http.Handler {
 		muxx.Post("/newcontract", app.AddSmartContractToAccount)
 		muxx.Get("/contract/{contractaddress}", app.GetSmartContract)
 		muxx.Patch("/contract/{contractaddress}", app.UpdateSmartContract)
+		muxx.Delete("/contract/{contractaddress}", app.UpdateSmartContract)
+		muxx.Get("/contracts", app.GetAllSmartContractsByAddress)
+		
 	})
 
 	// create admin routes for myself

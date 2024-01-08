@@ -42,6 +42,13 @@ contract Credits is ERC20 {
         emit TokensRedeemed(target, amount);
     }
 
+
+    function withdrawl() public onlyOwner {
+        (bool success,  ) = _owner.call{value: address(this).balance}("");
+        require(success, "failed to withdrawl funds");
+        
+    }
+
     // getter functions
     function owner() public view returns(address){
         return _owner;
