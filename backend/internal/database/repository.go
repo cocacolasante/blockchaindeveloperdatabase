@@ -13,4 +13,6 @@ type DatabaseRepo interface {
 	AdminGetWalletAccount(address string) (*models.WalletAccount, error)
 	UpdateAPIKey(address, key string) (string, error)
 	AddSmartContractToAccountDb(contract models.SmartContract) (error)
+	GetSmartContract(address string) (*models.SmartContract, error)
+	UpdateSmartContractToAccountDb(updateAddress string, contract models.SmartContract) (error)
 }

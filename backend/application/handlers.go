@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// CREATE A NEW WALLET ACCOUNT IN DATABASE
 func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid method", http.StatusBadRequest)
@@ -63,6 +64,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// GET USER WALLET BY ADDRESS FROM DATABASE
 func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.New("invalid method"), http.StatusBadRequest)
@@ -97,7 +99,6 @@ func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request)
 }
 
 // AUTHENTICATED HANDLERS
-
 func (app *Application) RefreshApiKey(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
@@ -154,6 +155,7 @@ func (app *Application) GetAccountFromDatabase(w http.ResponseWriter, r *http.Re
 
 }
 
+// ADD SMART CONTRACT ADDRESS TO WALLET ACCOUNT
 func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
@@ -193,6 +195,94 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		app.ErrorJSON(w, err)
 		return
 	}
+	w.Write(out)
+}
+
+// GET SMART CONTRACT FROM DATABASE BY ADDRESS
+func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request){
+	app.InfoLog.Println("hit in get contract")
+	if r.Method != http.MethodGet {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+
+	conAddress := chi.URLParam(r, "contractaddress")
+	if conAddress == ""{
+		app.ErrorJSON(w, errors.New("no contract address in url"))
+	}
+	app.InfoLog.Println("hit in get contract for address: " + conAddress)
+
+	smartContract, err := app.DB.GetSmartContract(conAddress)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	
+	out, err := json.Marshal(smartContract)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
+}
+
+func (app *Application) UpdateSmartContract(w http.ResponseWriter, r *http.Request){
+	app.InfoLog.Println("hit in update contract")
+	if r.Method != http.MethodPatch {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+	id := chi.URLParam(r, "contractaddress")
+	var input models.SmartContract
+	err := app.ReadJSON(w, r, &input)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return 
+	}
+
+	currentInDb, err := app.DB.GetSmartContract(id)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return 
+	}
+	if input.Description != ""{
+		currentInDb.Description = input.Description
+	}
+	if input.Abi != nil {
+		currentInDb.Abi = input.Abi
+	}
+	if len(input.StateVariables) > 0 {
+		currentInDb.StateVariables =input.StateVariables
+	}
+	if input.ProjectName != "" {
+		currentInDb.ProjectName = input.ProjectName
+	}
+
+	
+	// send call to update in db
+	err = app.DB.UpdateSmartContractToAccountDb(id, *currentInDb)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return 
+	}
+	
+	var successPayload = struct {
+		Message string `json:"message"`
+		SmartContract models.SmartContract
+	}{
+		Message: "Successfully updated contract",
+		SmartContract: *currentInDb,
+	}
+	out, err := json.Marshal(successPayload)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return 
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
 }
 

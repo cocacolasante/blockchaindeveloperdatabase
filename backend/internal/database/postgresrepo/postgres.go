@@ -116,6 +116,34 @@ func(db *PostgresDb) UpdateAPIKey(address, key string) (string, error) {
 }
 
 
+
+
+func(db *PostgresDb) GetSmartContract(address string) (*models.SmartContract, error){
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+	var contract models.SmartContract
+	var statevar any
+	query := `SELECT address, project_name, abi, deployer_wallet, description, state_variables FROM smartcontracts WHERE address = $1`
+
+
+
+	err := db.Db.QueryRowContext(ctx, query, address).Scan(
+		&contract.Address,
+		&contract.ProjectName,
+		&contract.Abi,
+		&contract.DeployerWallet,
+		&contract.Description,
+		&statevar,
+	)
+	// TO DO -- MAP STATEVAR TO THE STATEVARIABLES MAP[STRING]STRING 
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &contract, nil
+	
+}
 func(db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract) (error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -128,4 +156,26 @@ func(db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract) 
 	}
 
 	return nil
+}
+
+func(db *PostgresDb) UpdateSmartContractToAccountDb(updateAddress string, contract models.SmartContract) (error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        UPDATE smartcontracts
+        SET
+            project_name = $2,
+            abi = $3,
+            description = $4,
+            state_variables = $5
+        WHERE address = $1;
+    `
+
+    _, err := db.Db.ExecContext(ctx, query, updateAddress, contract.ProjectName, contract.Abi, contract.Description, contract.StateVariables)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
