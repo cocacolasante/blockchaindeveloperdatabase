@@ -22,6 +22,8 @@ func (app *Application) Routes() http.Handler {
 	// create a handler to get api key from login credentials
 	// mux.Post("/login", )
 
+	// get remaining credits
+	
 
 	// protected routes -uses api key
 	mux.Route("/{address}", func(muxx chi.Router) {
@@ -36,6 +38,9 @@ func (app *Application) Routes() http.Handler {
 
 		muxx.Get("/contracts", app.GetAllSmartContractAddressesByWallet)
 		muxx.Get("/fullcontracts", app.GetSmartContractFullByWallet)
+
+
+		muxx.Get("/credits", app.GetRemainCreditsByAddress)
 		
 	})
 

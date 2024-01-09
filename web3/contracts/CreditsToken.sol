@@ -19,6 +19,7 @@ contract Credits is ERC20 {
     constructor(string memory _name, string memory _symbol, uint tp) ERC20(_name, _symbol){
         _owner = msg.sender;
         _tokenPrice = tp;
+        _mint(msg.sender, 100000);
     }
 
 

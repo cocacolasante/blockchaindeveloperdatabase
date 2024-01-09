@@ -1,5 +1,9 @@
 # TO DO
-    create middleware to check for api auth
-    figure out best route to auth users to create sign in
-        and to use api key to add smart contract data and info
-        should create wallet account be a frontend function only requiring the end user to sign a transaction before allowing add wallet to db?
+    FIGURE OUT HOW TO SET USERS API KEY IN FRONTEND FOR AFTER THEY ARE LOGGED IN
+        SESSION DATA?
+        HTTP COOKIE?
+        API HEADER
+            HOW SHOULD I STORE THE API HEADER WHILE USER IS NAVIGATING PAGES?
+        ******AUTHENTICATING FRONTEND WITH USER METAMASK WALLET WOULD BE THE BEST BET
+    CREATE FRONTEND FOR USER INTERFACE
+

@@ -30,7 +30,7 @@ func (app *Application) authRequired(next http.Handler) http.Handler {
 			app.ErrorJSON(w, err)
 			return
 		}
-		app.InfoLog.Println("isVerified in middleware", isVerified)
+		
 		if !isVerified {
 			app.ErrorJSON(w, errors.New("unauthenticated"), http.StatusBadRequest)
 			return

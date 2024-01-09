@@ -175,7 +175,11 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 	}
 	app.InfoLog.Println("users balance:",balance)
 	// @todo DEBIT A CREDIT TOKEN BY CALLING REDEEM TOKEN FROM THE SMART CONTRACT AS AN ADMIN
-	
+	err = app.Web3.RedeemCredits(id)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
 
 	var smartContract models.SmartContract
 	err = app.ReadJSON(w, r, &smartContract)
@@ -355,6 +359,7 @@ func (app *Application) GetAllSmartContractAddressesByWallet(w http.ResponseWrit
 	w.Write(out)
 
 }
+
 func (app *Application) GetSmartContractFullByWallet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
@@ -378,4 +383,35 @@ func (app *Application) GetSmartContractFullByWallet(w http.ResponseWriter, r *h
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
 
+}
+
+
+func (app *Application) GetRemainCreditsByAddress(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+
+	userId := chi.URLParam(r, "address")
+	bal, err := app.Web3.GetRemainingCredits(userId)
+	if err != nil {
+		app.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	var payload = struct {
+		Address string `json:"address"`
+		Balance *big.Int `json:"balance"`
+	}{
+		Address: userId,
+		Balance: bal,
+	}
+	out,err := json.Marshal(payload)
+	if err != nil {
+		app.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
 }
