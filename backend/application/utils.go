@@ -147,7 +147,6 @@ func (app *Application) VerifyHeaders(w http.ResponseWriter, r *http.Request) (b
 	if err != nil {
 		return isVerified, err
 	}
-	app.InfoLog.Println("middleware utils auth api match:", matches)
 	if matches{
 		isVerified = true
 	}
@@ -158,7 +157,7 @@ func (app *Application) VerifyHeaders(w http.ResponseWriter, r *http.Request) (b
 
 func(app *Application) CheckIfApiMatchesDatabase(walletAddress, key string) (bool, error) {
 	wallet, err := app.DB.AdminGetWalletAccount(walletAddress) 
-	app.InfoLog.Println("check if api matches: ",wallet)
+	
 	if err != nil {
 		return false, err
 	}

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
@@ -69,7 +70,6 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-
 	query := ` SELECT
             wallet_address,
             credits_available,
@@ -80,7 +80,7 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
         WHERE wallet_address = $1; `
 
 	var wallet models.WalletAccount
-	var smartContractsStr string 
+	var smartContractsStr string
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
@@ -98,8 +98,7 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
 	return &wallet, err
 }
 
-
-func(db *PostgresDb) UpdateAPIKey(address, key string) (string, error) {
+func (db *PostgresDb) UpdateAPIKey(address, key string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -112,20 +111,14 @@ func(db *PostgresDb) UpdateAPIKey(address, key string) (string, error) {
 	}
 	return newKey, nil
 
-
 }
 
-
-
-
-func(db *PostgresDb) GetSmartContract(address string) (*models.SmartContract, error){
+func (db *PostgresDb) GetSmartContract(address string) (*models.SmartContract, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 	var contract models.SmartContract
 	var statevar any
 	query := `SELECT address, project_name, abi, deployer_wallet, description, state_variables FROM smartcontracts WHERE address = $1`
-
-
 
 	err := db.Db.QueryRowContext(ctx, query, address).Scan(
 		&contract.Address,
@@ -135,45 +128,95 @@ func(db *PostgresDb) GetSmartContract(address string) (*models.SmartContract, er
 		&contract.Description,
 		&statevar,
 	)
-	// TO DO -- MAP STATEVAR TO THE STATEVARIABLES MAP[STRING]STRING 
+	// TO DO -- MAP STATEVAR TO THE STATEVARIABLES MAP[STRING]STRING
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &contract, nil
-	
+
 }
-func(db *PostgresDb) GetAllSmartContract(userAddress string) (*[]models.SmartContract, error){
+
+func (db *PostgresDb) GetAllSmartContractInWalletAccounts(userAddress string) (*[]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	var contracts []models.SmartContract
+	var contracts []string
 
-	firstQuery := `select smart_contract_addresses from walletaccounts where wallet_address = $1`
+	firstQuery := `SELECT smart_contract_addresses FROM walletaccounts WHERE wallet_address = $1`
 	rows, err := db.Db.QueryContext(ctx, firstQuery, userAddress)
 	if err != nil {
+		log.Println("query", err)
 		return nil, err
 	}
 	defer rows.Close()
-	for rows.Next(){
-		
-		var locContract models.SmartContract
-		rows.Scan(&locContract)
-		contracts = append(contracts, locContract)
-		
+
+	for rows.Next() {
+		var smartContractsStr string
+		if err := rows.Scan(&smartContractsStr); err != nil {
+			log.Println("scan", err)
+			return nil, err
+		}
+		addresses := strings.Split(strings.Trim(smartContractsStr, "{}"), ",")
+
+		// Trim spaces from each address
+		for i, address := range addresses {
+			addresses[i] = strings.TrimSpace(address)
+		}
+
+		contracts = append(contracts, addresses...)
 	}
 
+	log.Println("final contracts:", contracts)
+
 	return &contracts, nil
-	
 }
-func(db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract, id string) (error) {
+
+func (db *PostgresDb) GetAllFullScInWallet(userAddress string) (*[]models.SmartContract, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	addresses, err := db.GetAllSmartContractInWalletAccounts(userAddress)
+	if err != nil {
+		log.Println("query", err)
+		return nil, err
+	}
+	quotedAddresses := make([]string, len(*addresses))
+    for i, address := range *addresses {
+        quotedAddresses[i] = "'" + address + "'"
+    }
+	query := `SELECT address, project_name, abi, deployer_wallet, description FROM smartcontracts WHERE address IN (` + strings.Join(quotedAddresses, ",") + `);`
+	rows, err := db.Db.QueryContext(ctx, query)
+	if err != nil {
+		log.Println("query", err)
+		return nil, err
+	}
+	defer rows.Close()
+	var smartContracts []models.SmartContract
+
+	// Iterate over the rows and scan each result into a SmartContract struct
+	for rows.Next() {
+		var sc models.SmartContract
+		if err := rows.Scan(&sc.Address, &sc.ProjectName, &sc.Abi, &sc.DeployerWallet, &sc.Description); err != nil {
+			log.Println("scan", err)
+			return nil, err
+		}
+		smartContracts = append(smartContracts, sc)
+	}
+
+	log.Println("final smart contracts:", smartContracts)
+
+	return &smartContracts, nil
+}
+
+func (db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	stmt := `INSERT INTO smartcontracts (address, project_name, abi, deployer_wallet, description, state_variables) values($1, $2, $3, $4, $5,$6);`
 
-	_, err := db.Db.ExecContext(ctx, stmt, contract.Address, contract.ProjectName, contract.Abi, contract.DeployerWallet, contract.Description,contract.StateVariables )
+	_, err := db.Db.ExecContext(ctx, stmt, contract.Address, contract.ProjectName, contract.Abi, contract.DeployerWallet, contract.Description, contract.StateVariables)
 	if err != nil {
 		return err
 	}
@@ -190,7 +233,7 @@ func(db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract, 
 	return nil
 }
 
-func(db *PostgresDb) UpdateSmartContractToAccountDb(updateAddress string, contract models.SmartContract) (error) {
+func (db *PostgresDb) UpdateSmartContractToAccountDb(updateAddress string, contract models.SmartContract) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -204,15 +247,15 @@ func(db *PostgresDb) UpdateSmartContractToAccountDb(updateAddress string, contra
         WHERE address = $1;
     `
 
-    _, err := db.Db.ExecContext(ctx, query, updateAddress, contract.ProjectName, contract.Abi, contract.Description, contract.StateVariables)
-    if err != nil {
-        return err
-    }
+	_, err := db.Db.ExecContext(ctx, query, updateAddress, contract.ProjectName, contract.Abi, contract.Description, contract.StateVariables)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
-func(db *PostgresDb) DeleteSmartContract(address, userAddress string) (error){
+func (db *PostgresDb) DeleteSmartContract(address, userAddress string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -229,6 +272,6 @@ func(db *PostgresDb) DeleteSmartContract(address, userAddress string) (error){
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }

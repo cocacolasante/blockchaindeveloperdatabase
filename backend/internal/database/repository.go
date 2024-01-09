@@ -16,5 +16,6 @@ type DatabaseRepo interface {
 	GetSmartContract(address string) (*models.SmartContract, error)
 	UpdateSmartContractToAccountDb(updateAddress string, contract models.SmartContract) (error)
 	DeleteSmartContract(address, userAddress string)(error)
-	GetAllSmartContract(userAddress string) (*[]models.SmartContract, error)
+	GetAllSmartContractInWalletAccounts(userAddress string) (*[]string, error)
+	GetAllFullScInWallet(userAddress string) (*[]models.SmartContract, error)
 }

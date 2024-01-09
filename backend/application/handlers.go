@@ -307,7 +307,7 @@ func (app *Application) DeleteSmartContract(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	connAdd := chi.URLParam(r, "contractaddress")
-	userAddress := chi.URLParam(r, "id")
+	userAddress := chi.URLParam(r, "address")
 	err := app.DB.DeleteSmartContract(connAdd, userAddress)
 	if err != nil {
 		app.ErrorLog.Println(err)
@@ -331,19 +331,45 @@ func (app *Application) DeleteSmartContract(w http.ResponseWriter, r *http.Reque
 	w.Write(out)
 }
 
-func (app *Application) GetAllSmartContractsByAddress(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetAllSmartContractAddressesByWallet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
 	}
 
-	userId := chi.URLParam(r, "id")
-	contracts, err := app.DB.GetAllSmartContract(userId)
+	userId := chi.URLParam(r, "address")
+	app.InfoLog.Println("user wallet:", userId)
+	contractAddresses, err := app.DB.GetAllSmartContractInWalletAccounts(userId)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+	out, err := json.Marshal(contractAddresses)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
-	out, err := json.Marshal(contracts)
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
+
+}
+func (app *Application) GetSmartContractFullByWallet(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
+		return
+	}
+
+	userId := chi.URLParam(r, "address")
+	app.InfoLog.Println("user wallet:", userId)
+	contractAddresses, err := app.DB.GetAllFullScInWallet(userId)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+	out, err := json.Marshal(contractAddresses)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return

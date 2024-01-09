@@ -34,7 +34,8 @@ func (app *Application) Routes() http.Handler {
 		muxx.Patch("/contract/{contractaddress}", app.UpdateSmartContract)
 		muxx.Delete("/contract/{contractaddress}", app.DeleteSmartContract)
 
-		muxx.Get("/contracts", app.GetAllSmartContractsByAddress)
+		muxx.Get("/contracts", app.GetAllSmartContractAddressesByWallet)
+		muxx.Get("/fullcontracts", app.GetSmartContractFullByWallet)
 		
 	})
 
