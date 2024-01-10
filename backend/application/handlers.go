@@ -213,7 +213,6 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 	if smartContract.DeployerWallet == "" {
 		smartContract.DeployerWallet = id
 	}
-	app.InfoLog.Println("smart contract from request", smartContract)
 
 	err = app.DB.AddSmartContractToAccountDb(smartContract, id)
 
@@ -505,6 +504,19 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+
+
+	// VERIFY ACCOUNT IS ACTIVE BY RECALLING DB THEN RENDERING HTML WEBPAGE
+	wallet, err := app.DB.AdminGetWalletAccount(id)
+	if err != nil {
+		app.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+	if !wallet.Active {
+		app.ErrorJSON(w, errors.New("error activating account"))
+		return
+	}
+
 	var payload = struct {
 		Message string `json:"message"`
 		WalletAddress string `json:"wallet_address"`
@@ -520,7 +532,9 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Add("Content-Type", "application/json")
+	// render thank you for activating template
+
 	w.Write(out)
-
-
 }
+
+

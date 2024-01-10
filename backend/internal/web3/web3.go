@@ -24,8 +24,6 @@ const CHAINID =80001
 func GetClient() (*ethclient.Client, error) {
 	var client *ethclient.Client
 
-	fmt.Printf("Getting Blockchain Client \n")
-
 	ethURL := os.Getenv("POLYGON_MAINNET_URL")
 	conn, err := ethclient.Dial(ethURL)
 	if err != nil {

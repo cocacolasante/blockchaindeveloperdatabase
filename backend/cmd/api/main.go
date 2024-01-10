@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -32,12 +33,20 @@ func main() {
 	if err != nil {
 		app.ErrorLog.Fatalf("cannot connect to db %s\n", err)
 	}
+	
+	fmt.Println("-------------------------------------------")
+	fmt.Println(" ")
 
 	app.DB = &postgresrepo.PostgresDb{Db: conn}
 
 	defer app.DB.Connection().Close()
 
 	app.InfoLog.Printf("Connecting to blockchain")
+
+	
+	fmt.Println("-------------------------------------------")
+	fmt.Println(" ")
+
 	web3Conn, err := web3.GetClient()
 	if err != nil {
 		app.ErrorLog.Println("Unable to connect to blockchain")
@@ -47,12 +56,22 @@ func main() {
 	defer app.Web3.Client.Close()
 	app.InfoLog.Println("connected to blockchain")
 
+	
+	fmt.Println("-------------------------------------------")
+	fmt.Println(" ")
+
 	m := app.CreateMail()
 	app.Mailer = &m
+	
+	
+	fmt.Println("-------------------------------------------")
+	fmt.Println(" ")
 	
 
 	app.InfoLog.Printf("Application configured\n")
 	app.InfoLog.Printf("starting application\n")
+	fmt.Println("-------------------------------------------")
+	fmt.Println(" ")
 	app.Start()
 
 }

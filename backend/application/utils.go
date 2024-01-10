@@ -203,3 +203,4 @@ func(app *Application) VerifyActive(r *http.Request) (bool, error){
 
 	return true, nil
 }
+

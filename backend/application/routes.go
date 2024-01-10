@@ -52,6 +52,11 @@ func (app *Application) Routes() http.Handler {
 
 	})
 
+
+	mux.Route("/admin", func(r chi.Router) {
+		
+	})
+
 	// create admin routes for myself
 
 

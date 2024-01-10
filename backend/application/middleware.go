@@ -75,3 +75,12 @@ func(app *Application) ActiveAccountMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+
+func(app *Application) AdminAuthentication(next http.Handler) http.Handler{
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		
+
+		next.ServeHTTP(w, r)
+	})
+}
