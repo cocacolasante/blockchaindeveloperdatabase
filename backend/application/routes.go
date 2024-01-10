@@ -47,7 +47,7 @@ func (app *Application) Routes() http.Handler {
 
 	mux.Route("/activate/{address}", func(r chi.Router) {
 		r.Use(app.EmailAuthMiddleware)
-		r.Get("/{apikey}", app.ActivateAccount)
+		r.Get("/", app.ActivateAccount)
 
 	})
 

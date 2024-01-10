@@ -24,13 +24,13 @@ func (app *Application) EnableCORS(h http.Handler) http.Handler {
 
 func (app *Application) authRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		
+
 		isVerified, err := app.VerifyHeaders(w, r)
 		if err != nil {
 			app.ErrorJSON(w, err)
 			return
 		}
-		
+
 		if !isVerified {
 			app.ErrorJSON(w, errors.New("unauthenticated"), http.StatusBadRequest)
 			return
@@ -40,8 +40,8 @@ func (app *Application) authRequired(next http.Handler) http.Handler {
 	})
 }
 
-func(app *Application) EmailAuthMiddleware(next http.Handler) http.Handler{
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+func (app *Application) EmailAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		verified, err := app.VerifyURL(r)
 		if err != nil {

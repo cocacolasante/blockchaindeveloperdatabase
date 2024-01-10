@@ -29,6 +29,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		app.ErrorJSON(w, err)
 		return
 	}
+
 	input.Active = false
 
 	existing, err := app.DB.GetWalletByAddress(input.WalletAddress)
@@ -60,7 +61,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 	input.Password = hasPass
 
 	datamap := make(map[string]any)
-	datamap["activatelink"] = fmt.Sprintf("http://%s:%d/%s/activateaccount/%s", app.Domain, app.Port, input.WalletAddress, apikey)
+	datamap["activatelink"] = fmt.Sprintf("http://%s:%d/activateaccount/%s?key=%s", app.Domain, app.Port, input.WalletAddress, apikey)
 	
 
 	msg, err := app.Mailer.CreateMessage(input.Email, "Please Activate Your Account", "confirmation-email", datamap)
@@ -495,13 +496,15 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Invalid method", http.StatusBadRequest)
 		return
 	}
-	id := chi.URLParam(r, "account")
+	id := chi.URLParam(r, "address")
 
+	app.InfoLog.Println("handlers activate account",id)
 	err := app.DB.ActivateAccount(id)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
+	
 	var payload = struct {
 		Message string `json:"message"`
 		WalletAddress string `json:"wallet_address"`
@@ -515,7 +518,9 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	app.writeJSON(w, http.StatusAccepted, out)
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
 
 
 }

@@ -6,7 +6,7 @@ CREATE TABLE walletaccounts (
     smart_contract_addresses VARCHAR(255)[], -- Assuming array of strings can be stored as JSON
     credits_available BIGINT,
     api_key VARCHAR(255),
-    active boolean
+    activated BOOLEAN DEFAULT false NOT NULL -- Set default value to false
 );
 
 -- Create TABLE smartcontracts
