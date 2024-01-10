@@ -14,7 +14,7 @@ CREATE TABLE smartcontracts (
     address VARCHAR(255) PRIMARY KEY,
     project_name VARCHAR(255),
     abi JSON,
-    deployer_wallet VARCHAR(255) REFERENCES walletaccounts(wallet_address),
+    deployer_wallet VARCHAR(255),
     description TEXT,
     state_variables JSON -- Assuming map[string]string can be stored as JSON
 );

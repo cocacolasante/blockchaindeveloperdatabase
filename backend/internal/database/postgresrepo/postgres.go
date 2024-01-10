@@ -76,6 +76,7 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
             credits_available,
 			email,
             api_key,
+			activated,
             COALESCE(smart_contract_addresses, '{}'::VARCHAR[]) AS smart_contract_addresses
         FROM walletaccounts
         WHERE wallet_address = $1; `
@@ -87,6 +88,7 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
 		&wallet.CreditsAvailable,
 		&wallet.Email,
 		&wallet.ApiKey,
+		&wallet.Active,
 		&smartContractsStr,
 	)
 
@@ -108,6 +110,7 @@ func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.Wallet
 			email,
 			password,
             api_key,
+			activated,
             COALESCE(smart_contract_addresses, '{}'::VARCHAR[]) AS smart_contract_addresses
         FROM walletaccounts
         WHERE email = $1; `
@@ -120,6 +123,7 @@ func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.Wallet
 		&wallet.Email,
 		&wallet.Password,
 		&wallet.ApiKey,
+		&wallet.Active,
 		&smartContractsStr,
 	)
 

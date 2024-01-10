@@ -57,3 +57,21 @@ func (app *Application) EmailAuthMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func(app *Application) ActiveAccountMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		valid, err := app.VerifyActive(r)
+		if err != nil {
+			app.ErrorJSON(w, err)
+			return
+		}
+
+		if !valid {
+			app.ErrorJSON(w, errors.New("inactive account"), http.StatusBadRequest)
+			return
+		}
+		
+
+		next.ServeHTTP(w, r)
+	})
+}

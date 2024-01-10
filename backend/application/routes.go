@@ -28,6 +28,7 @@ func (app *Application) Routes() http.Handler {
 	// protected routes -uses api key
 	mux.Route("/{address}", func(muxx chi.Router) {
 		muxx.Use(app.authRequired)
+		muxx.Use(app.ActiveAccountMiddleware)
 		muxx.Get("/refreshapikey", app.RefreshApiKey)
 		muxx.Get("/", app.GetAccountFromDatabase)
 		// add smart contract to a users account   ---- needs to add in the smart contract call to deduct credits

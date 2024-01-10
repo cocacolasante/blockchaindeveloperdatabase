@@ -170,7 +170,6 @@ func(app *Application) CheckIfApiMatchesDatabase(walletAddress, key string) (boo
 
 
 func(app *Application) VerifyURL(r *http.Request) (bool, error) {
-	app.InfoLog.Println(r.URL)
 	walletAddress := chi.URLParam(r, "address")
 	reqKey := r.URL.Query().Get("key")
 	
@@ -179,8 +178,7 @@ func(app *Application) VerifyURL(r *http.Request) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	app.InfoLog.Println("URL API KEY:", reqKey)
-	app.InfoLog.Println("DB API KEY:", wallet.ApiKey)
+	
 
 	if wallet.ApiKey != reqKey {
 		return false, errors.New("invalid email auth")
@@ -189,4 +187,19 @@ func(app *Application) VerifyURL(r *http.Request) (bool, error) {
 	
 	return true, nil
 
+}
+
+
+func(app *Application) VerifyActive(r *http.Request) (bool, error){
+	walletAddress := chi.URLParam(r, "address")
+	wallet, err := app.DB.AdminGetWalletAccount(walletAddress) 
+	if err != nil {
+		return false, err
+	}
+
+	if !wallet.Active{
+		return false, errors.New("inactive account")
+	}
+
+	return true, nil
 }
