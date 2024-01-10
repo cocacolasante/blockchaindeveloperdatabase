@@ -61,8 +61,8 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 	input.Password = hasPass
 
 	datamap := make(map[string]any)
-	datamap["activatelink"] = fmt.Sprintf("http://%s:%d/activateaccount/%s?key=%s", app.Domain, app.Port, input.WalletAddress, apikey)
-	
+	datamap["activatelink"] = fmt.Sprintf("http://%s:%d/activate/%s?key=%s", app.Domain, app.Port, input.WalletAddress, apikey)
+	datamap["apikey"] = apikey
 
 	msg, err := app.Mailer.CreateMessage(input.Email, "Please Activate Your Account", "confirmation-email", datamap)
 	if err != nil {
@@ -504,7 +504,7 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 		app.ErrorJSON(w, err)
 		return
 	}
-	
+
 	var payload = struct {
 		Message string `json:"message"`
 		WalletAddress string `json:"wallet_address"`
