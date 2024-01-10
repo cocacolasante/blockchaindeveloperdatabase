@@ -10,4 +10,5 @@ type WalletAccount struct {
 	SmartContractAddresses []string `json:"smart_contract_addresses"`
 	CreditsAvailable       *big.Int `json:"credits_available"`
 	ApiKey                 string   `json:"api_key"`
+	Active                 bool     `json:"active"`
 }

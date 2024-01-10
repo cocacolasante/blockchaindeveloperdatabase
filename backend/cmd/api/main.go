@@ -47,6 +47,10 @@ func main() {
 	defer app.Web3.Client.Close()
 	app.InfoLog.Println("connected to blockchain")
 
+	m := app.CreateMail()
+	app.Mailer = &m
+	
+
 	app.InfoLog.Printf("Application configured\n")
 	app.InfoLog.Printf("starting application\n")
 	app.Start()

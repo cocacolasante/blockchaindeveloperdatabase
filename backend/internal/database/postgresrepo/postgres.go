@@ -66,6 +66,7 @@ func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount,
 	return &wallet, err
 
 }
+
 func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -85,6 +86,39 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
 		&wallet.Email,
+		&wallet.ApiKey,
+		&smartContractsStr,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	wallet.SmartContractAddresses = append(wallet.SmartContractAddresses, smartContractsStr)
+
+	return &wallet, err
+}
+func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.WalletAccount, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := ` SELECT
+            wallet_address,
+            credits_available,
+			email,
+			password,
+            api_key,
+            COALESCE(smart_contract_addresses, '{}'::VARCHAR[]) AS smart_contract_addresses
+        FROM walletaccounts
+        WHERE email = $1; `
+
+	var wallet models.WalletAccount
+	var smartContractsStr string
+	err := db.Db.QueryRowContext(ctx, query, email).Scan(
+		&wallet.WalletAddress,
+		&wallet.CreditsAvailable,
+		&wallet.Email,
+		&wallet.Password,
 		&wallet.ApiKey,
 		&smartContractsStr,
 	)
@@ -275,3 +309,19 @@ func (db *PostgresDb) DeleteSmartContract(address, userAddress string) error {
 
 	return nil
 }
+
+
+func(db *PostgresDb) ActivateAccount(walletAddress string) (error){
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+	stmt := `UPDATE walletaccounts
+			SET activated = $1
+			WHERE wallet_address = $2;`
+	_, err := db.Db.ExecContext(ctx, stmt, true, walletAddress)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+

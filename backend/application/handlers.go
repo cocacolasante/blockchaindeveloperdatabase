@@ -3,7 +3,7 @@ package application
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"math/big"
 	"net/http"
 
@@ -29,6 +29,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		app.ErrorJSON(w, err)
 		return
 	}
+	input.Active = false
 
 	existing, err := app.DB.GetWalletByAddress(input.WalletAddress)
 	if err != nil {
@@ -47,7 +48,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	hasPass := app.HashPassword(input.Password)
-	log.Println(hasPass)
+
 	// add wallet to db returns the new users api key to access api
 	apikey, err := app.DB.AddWalletToDb(input.WalletAddress, input.Email, hasPass)
 	if err != nil {
@@ -58,10 +59,31 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 	input.ApiKey = apikey
 	input.Password = hasPass
 
+	datamap := make(map[string]any)
+	datamap["activatelink"] = fmt.Sprintf("http://%s:%d/%s/activateaccount/%s", app.Domain, app.Port, input.WalletAddress, apikey)
+	
+
+	msg, err := app.Mailer.CreateMessage(input.Email, "Please Activate Your Account", "confirmation-email", datamap)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+	app.InfoLog.Println("Created msg, sending mail now")
+	err = app.Mailer.SendEmail(msg)
+
+	if err != nil {
+		app.ErrorLog.Println(err)
+		// Handle error writing JSON
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	err = app.writeJSON(w, http.StatusAccepted, input)
 	if err != nil {
 		// Handle error writing JSON
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -173,7 +195,7 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		app.ErrorJSON(w, errors.New("insufficient balance"))
 		return
 	}
-	app.InfoLog.Println("users balance:",balance)
+	app.InfoLog.Println("users balance:", balance)
 	// @todo DEBIT A CREDIT TOKEN BY CALLING REDEEM TOKEN FROM THE SMART CONTRACT AS AN ADMIN
 	err = app.Web3.RedeemCredits(id)
 	if err != nil {
@@ -385,7 +407,6 @@ func (app *Application) GetSmartContractFullByWallet(w http.ResponseWriter, r *h
 
 }
 
-
 func (app *Application) GetRemainCreditsByAddress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
@@ -400,13 +421,13 @@ func (app *Application) GetRemainCreditsByAddress(w http.ResponseWriter, r *http
 	}
 
 	var payload = struct {
-		Address string `json:"address"`
+		Address string   `json:"address"`
 		Balance *big.Int `json:"balance"`
 	}{
 		Address: userId,
 		Balance: bal,
 	}
-	out,err := json.Marshal(payload)
+	out, err := json.Marshal(payload)
 	if err != nil {
 		app.ErrorJSON(w, err, http.StatusBadRequest)
 		return
@@ -414,4 +435,87 @@ func (app *Application) GetRemainCreditsByAddress(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
+}
+
+func (app *Application) APIKeyWithLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid method", http.StatusBadRequest)
+		return
+	}
+
+	// add in a password hash field
+
+	var input models.WalletAccount
+	err := app.ReadJSON(w, r, &input)
+
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	if input.Email == "" {
+		app.ErrorJSON(w, errors.New("empty email field"))
+		return
+	}
+	if input.Password == "" {
+		app.ErrorJSON(w, errors.New("empty password field"))
+		return
+	}
+
+	existing, err := app.DB.AdminGetWalletAccountByEmail(input.Email)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	passHash := app.HashPassword(input.Password)
+
+	if existing.Password != passHash {
+		app.InfoLog.Println(existing.Password)
+		app.InfoLog.Println(input.Password)
+		app.ErrorJSON(w, errors.New("invalid login credentials"))
+		return
+	}
+
+	out, err := json.Marshal(existing)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Set("Content-Type", "application")
+	w.Write(out)
+
+}
+
+
+func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet{
+		http.Error(w, "Invalid method", http.StatusBadRequest)
+		return
+	}
+	id := chi.URLParam(r, "account")
+
+	err := app.DB.ActivateAccount(id)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+	var payload = struct {
+		Message string `json:"message"`
+		WalletAddress string `json:"wallet_address"`
+	}{
+		Message: "Successfully Activated Account",
+		WalletAddress: id,
+	}
+	out, err := json.Marshal(payload)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	app.writeJSON(w, http.StatusAccepted, out)
+
+
 }

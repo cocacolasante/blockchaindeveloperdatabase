@@ -20,11 +20,11 @@ func (app *Application) Routes() http.Handler {
 	mux.Post("/signup", app.CreateWalletAccount)
 
 	// create a handler to get api key from login credentials
-	// mux.Post("/login", )
+	mux.Post("/login", app.APIKeyWithLogin) // use to get api key with login credentials
 
 	// get remaining credits
 	
-
+	
 	// protected routes -uses api key
 	mux.Route("/{address}", func(muxx chi.Router) {
 		muxx.Use(app.authRequired)
@@ -42,6 +42,13 @@ func (app *Application) Routes() http.Handler {
 
 		muxx.Get("/credits", app.GetRemainCreditsByAddress)
 		
+		
+	})
+
+	mux.Route("/activate/{address}", func(r chi.Router) {
+		r.Use(app.EmailAuthMiddleware)
+		r.Get("/{apikey}", app.ActivateAccount)
+
 	})
 
 	// create admin routes for myself

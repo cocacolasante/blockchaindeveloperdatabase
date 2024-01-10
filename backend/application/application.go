@@ -17,7 +17,8 @@ type Application struct {
 	DB       repository.DatabaseRepo
 	ErrorLog *log.Logger
 	InfoLog  *log.Logger
-	Web3 web3.Web3Connect
+	Web3     web3.Web3Connect
+	Mailer   *Mail
 }
 
 func NewApplication(domain, dsn string, port int) *Application {
@@ -49,7 +50,7 @@ func (app *Application) ConnectToDb() (*sql.DB, error) {
 		log.Fatal(err)
 	}
 
-	log.Println("Connected to Database")
+	app.InfoLog.Println("Connected to Database")
 
 	return conn, nil
 }

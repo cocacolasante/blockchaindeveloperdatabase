@@ -18,4 +18,6 @@ type DatabaseRepo interface {
 	DeleteSmartContract(address, userAddress string)(error)
 	GetAllSmartContractInWalletAccounts(userAddress string) (*[]string, error)
 	GetAllFullScInWallet(userAddress string) (*[]models.SmartContract, error)
+	AdminGetWalletAccountByEmail(email string) (*models.WalletAccount, error)
+	ActivateAccount(walletAddress string) (error)
 }

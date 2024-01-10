@@ -5,7 +5,8 @@ CREATE TABLE walletaccounts (
     password VARCHAR(255),
     smart_contract_addresses VARCHAR(255)[], -- Assuming array of strings can be stored as JSON
     credits_available BIGINT,
-    api_key VARCHAR(255)
+    api_key VARCHAR(255),
+    active boolean
 );
 
 -- Create TABLE smartcontracts
