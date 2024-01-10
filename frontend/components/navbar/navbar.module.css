@@ -1,0 +1,23 @@
+/* Navbar.module.css */
+
+.navbarContainer {
+    display: flex;
+    justify-content: space-between; /* Aligns items with space between them */
+    padding: 10px; /* Add some padding for better spacing */
+    background-color: #333; /* Example background color for the navbar */
+  }
+  
+  .linksContainer {
+    display: flex;
+    gap: 20px; /* Adjust the gap between links as needed */
+  }
+  
+  .linksContainer a {
+    text-decoration: none;
+    color: white; /* Set the color of the links */
+  }
+  
+  .linksContainer a:hover {
+    color: #ffcc00; /* Change color on hover */
+  }
+  
