@@ -1,9 +1,7 @@
-import React from 'react'
+import styles from "./Footer.module.css"; // Import the CSS module
 
 const Footer = () => {
-  return (
-    <div>Footer</div>
-  )
-}
+  return <div className={styles.footer}>Copyright The Blockchain Dojo</div>;
+};
 
-export default Footer
+export default Footer;

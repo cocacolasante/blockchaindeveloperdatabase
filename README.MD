@@ -7,6 +7,10 @@
             LIST OF SMART CONTRACTS
                 INDIVIDUAL SMART CONTRACTS
             CREATE SMART CONTRACT IN DB
+        USER AUTHENTICATION - 
+            COOKIE WITH API KEY?
+            JWT?
+
 
     BACKEND
         ADMIN ROUTES

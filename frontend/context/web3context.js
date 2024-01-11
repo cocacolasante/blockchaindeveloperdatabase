@@ -60,8 +60,8 @@ export const SmartContractProvider = ({children}) =>{
       
           const creditPrice = await contract.tokenPrice();
           
-      
-          setTokenPrice(creditPrice.toString());
+            const parsed = ethers.formatEther(creditPrice)
+          setTokenPrice(parsed);
         } catch (error) {
           console.error("Error fetching token price:", error);
         }

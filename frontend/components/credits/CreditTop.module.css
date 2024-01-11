@@ -1,0 +1,15 @@
+/* CreditsTop.module.css */
+.creditsTopContainer {
+    text-align: center;
+  }
+  
+  .heading {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .subHeading {
+    font-size: 18px;
+    color: #666;
+  }
+  
