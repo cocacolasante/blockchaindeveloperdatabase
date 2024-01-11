@@ -2,25 +2,20 @@
 import React, {useState, useEffect, useContext} from "react";
 import { ethers } from "ethers";
 
-
-
-// import { ProfileAbi, ProfileContractAddress, AlbumCreatorAbi, AlbumCreatorAddress, networkId, rpcConnection, AlbumNftAbi } from "./constants";
+import creditAbi from "../utils/abi/credits.json"
+import {CREDITS_ADDRESS} from "../utils/addresses/addresses"
 
 // fetch smart contracts
-// const fetchProfileContract = (signerOrProvider) =>{
-//     return new ethers.Contract(ProfileContractAddress, ProfileAbi, signerOrProvider)
-// }
-// const fetchAlbumContract = (signerOrProvider) =>{
-//     return new ethers.Contract(AlbumCreatorAddress, AlbumCreatorAbi, signerOrProvider)
-// }
-
-
+const fetchCreditsContract = (signerOrProvider) =>{
+    return new ethers.Contract(CREDITS_ADDRESS, creditAbi.abi, signerOrProvider)
+}
 
 
 export const SmartContractContext = React.createContext();
 
 export const SmartContractProvider = ({children}) =>{
     const [currentAccount, setCurrentAccount] = useState()
+    const [tokenPrice, setTokenPrice] = useState()
 
     const connectToWallet = async () =>{
         try{
@@ -53,8 +48,9 @@ export const SmartContractProvider = ({children}) =>{
                 const currentUser = accounts[0];
     
                 setCurrentAccount(currentUser);
+                
 
-               
+                
 
             }
 
@@ -63,12 +59,48 @@ export const SmartContractProvider = ({children}) =>{
         }
     }
 
+    const getTokenPrice = async () => {
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const contract = fetchCreditsContract(provider);
+      
+          const creditPrice = await contract.tokenPrice();
+          
+      
+          setTokenPrice(creditPrice.toString());
+        } catch (error) {
+          console.error("Error fetching token price:", error);
+        }
+      };
+      
+      const purchaseTokens = async (tokenamount) =>{
+          try {
+            const purchaseAmount = ethers.parseUnits(tokenamount * tokenPrice).toString()
 
-    const RpcProvider = new ethers.BrowserProvider()
+
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner()
+            const contract = fetchCreditsContract(signer);
+
+            const tx = await contract.mintTokens(tokenamount.toString(), {value: purchaseAmount})
+            const res = await tx.wait()
+            if(res.status == 1) {
+                console.log("Success")
+            }else {
+                console.log("Failed")
+            }
+        
+        }catch(err){
+            console.log(err)
+        }
+      }
 
     useEffect(()=>{
         checkIfWalletIsConnected();
+        getTokenPrice()
+       
     }, [])
+
 
     return (
         <SmartContractContext.Provider
@@ -76,7 +108,8 @@ export const SmartContractProvider = ({children}) =>{
             connectToWallet,
             checkIfWalletIsConnected,
             currentAccount,
-            RpcProvider,
+            tokenPrice,
+            purchaseTokens
 
         })}
         >{children}</SmartContractContext.Provider>

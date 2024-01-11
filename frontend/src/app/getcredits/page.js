@@ -1,12 +1,9 @@
-import React from 'react'
+import CreditsTop from "../../../components/credits/CreditsTop"
 
 const page = () => {
   return (
     <div>
-      <h1>Purchase Credits</h1>
-      <div>
-        <h3>Price: {}</h3>
-      </div>
+      <CreditsTop />
     </div>
   )
 }
