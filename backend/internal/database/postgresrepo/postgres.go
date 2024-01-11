@@ -22,15 +22,15 @@ func (m *PostgresDb) Connection() *sql.DB {
 	return m.Db
 }
 
-func (db *PostgresDb) AddWalletToDb(address, email, password string) (string, error) {
+func (db *PostgresDb) AddWalletToDb(wallet *models.WalletAccount) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	apikey := tools.GenerateApiKey()
 
-	stmt := `insert into walletaccounts (wallet_address, api_key, email, password ) values ($1, $2, $3, $4)`
+	stmt := `insert into walletaccounts (wallet_address, api_key, email, password, credits_available ) values ($1, $2, $3, $4, $5)`
 
-	_, err := db.Db.ExecContext(ctx, stmt, address, apikey, email, password)
+	_, err := db.Db.ExecContext(ctx, stmt, wallet.WalletAddress, apikey, wallet.Email, wallet.Password, wallet.CreditsAvailable)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -104,7 +104,7 @@ func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.Wallet
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := ` SELECT
+	query := `SELECT
             wallet_address,
             credits_available,
 			email,
@@ -130,8 +130,10 @@ func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.Wallet
 	if err != nil {
 		return nil, err
 	}
-
+	
+		
 	wallet.SmartContractAddresses = append(wallet.SmartContractAddresses, smartContractsStr)
+	
 
 	return &wallet, err
 }

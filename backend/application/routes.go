@@ -20,11 +20,11 @@ func (app *Application) Routes() http.Handler {
 	mux.Post("/signup", app.CreateWalletAccount)
 
 	// create a handler to get api key from login credentials
-	mux.Post("/login", app.APIKeyWithLogin) // use to get api key with login credentials
+	mux.Post("/login", app.LoginWithEmail) // use to get api key with login credentials
 
 	// get remaining credits
 	
-	
+	mux.Post("/apikeywithemail", app.APIKeyWithLogin)
 	// protected routes -uses api key
 	mux.Route("/{address}", func(muxx chi.Router) {
 		muxx.Use(app.authRequired)

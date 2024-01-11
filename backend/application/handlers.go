@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"time"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/tools"
@@ -43,22 +44,26 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		app.ErrorJSON(w, errors.New("account already created in database"))
 		return
 	}
+
 	isValidated := app.ValidateSignUp(&input)
 	if !isValidated {
 		app.ErrorJSON(w, errors.New("missing fields in sign up creation"))
 		return
 	}
 	hasPass := app.HashPassword(input.Password)
-
+	input.Password = hasPass
 	// add wallet to db returns the new users api key to access api
-	apikey, err := app.DB.AddWalletToDb(input.WalletAddress, input.Email, hasPass)
+	apikey, err := app.DB.AddWalletToDb(&input)
 	if err != nil {
 		app.ErrorLog.Println(err)
 		app.ErrorJSON(w, err)
 		return
 	}
+	
 	input.ApiKey = apikey
-	input.Password = hasPass
+	
+
+	input.CreditsAvailable = big.NewInt(0)
 
 	datamap := make(map[string]any)
 	datamap["activatelink"] = fmt.Sprintf("http://%s:%d/activate/%s?key=%s", app.Domain, app.Port, input.WalletAddress, apikey)
@@ -70,9 +75,8 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		app.ErrorJSON(w, err)
 		return
 	}
-	app.InfoLog.Println("Created msg, sending mail now")
+	
 	err = app.Mailer.SendEmail(msg)
-
 	if err != nil {
 		app.ErrorLog.Println(err)
 		// Handle error writing JSON
@@ -483,28 +487,33 @@ func (app *Application) APIKeyWithLogin(w http.ResponseWriter, r *http.Request) 
 		app.ErrorJSON(w, err)
 		return
 	}
+
+	// cookie := http.Cookie{
+	// 	Name:    "apikey",
+	// 	Value:   existing.ApiKey,
+	// 	MaxAge:  86400000000000,
+	// 	Expires: time.Now().Add(86400000000000),
+	// }
+
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Set("Content-Type", "application")
 	w.Write(out)
 
 }
 
-
-func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet{
+func (app *Application) ActivateAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid method", http.StatusBadRequest)
 		return
 	}
 	id := chi.URLParam(r, "address")
 
-	app.InfoLog.Println("handlers activate account",id)
+	app.InfoLog.Println("handlers activate account", id)
 	err := app.DB.ActivateAccount(id)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
-
-
 
 	// VERIFY ACCOUNT IS ACTIVE BY RECALLING DB THEN RENDERING HTML WEBPAGE
 	wallet, err := app.DB.AdminGetWalletAccount(id)
@@ -518,10 +527,10 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 	}
 
 	var payload = struct {
-		Message string `json:"message"`
+		Message       string `json:"message"`
 		WalletAddress string `json:"wallet_address"`
 	}{
-		Message: "Successfully Activated Account",
+		Message:       "Successfully Activated Account",
 		WalletAddress: id,
 	}
 	out, err := json.Marshal(payload)
@@ -537,4 +546,65 @@ func(app *Application) ActivateAccount( w http.ResponseWriter, r *http.Request) 
 	w.Write(out)
 }
 
+// LOGIN HANDLER SETTING COOKIE IN BROWSER
+func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid method", http.StatusBadRequest)
+		return
+	}
 
+	// add in a password hash field
+
+	var input models.WalletAccount
+	err := app.ReadJSON(w, r, &input)
+
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	if input.Email == "" {
+		app.ErrorJSON(w, errors.New("empty email field"))
+		return
+	}
+	if input.Password == "" {
+		app.ErrorJSON(w, errors.New("empty password field"))
+		return
+	}
+
+	existing, err := app.DB.AdminGetWalletAccountByEmail(input.Email)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	passHash := app.HashPassword(input.Password)
+
+	if existing.Password != passHash {
+		app.ErrorJSON(w, errors.New("invalid login credentials"))
+		return
+	}
+
+	out, err := json.Marshal(existing)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	app.InfoLog.Println("existing from db", existing.ApiKey)
+
+	cookie := http.Cookie{
+		Name:    "apikey",
+		Value:   existing.ApiKey,
+		MaxAge:  86400000000000,
+		Expires: time.Now().Add(86400000000000),
+	}
+
+	http.SetCookie(w, &cookie)
+
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Set("Content-Type", "application")
+	w.Write(out)
+
+}

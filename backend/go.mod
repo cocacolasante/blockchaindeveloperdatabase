@@ -6,6 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.8
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.0.11
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/vanng822/go-premailer v1.20.2
