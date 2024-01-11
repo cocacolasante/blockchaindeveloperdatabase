@@ -1,7 +1,7 @@
 "use client"
 import { useContext } from "react"
 import { SmartContractContext } from "../../context/web3context"
-import BuyCredits from "./buycredits"
+import BuyCredits from "./BuyCredits"
 
 
 const CreditsTop = () => {

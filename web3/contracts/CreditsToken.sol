@@ -24,14 +24,14 @@ contract Credits is ERC20 {
 
 
     function mintTokens(uint numOfTokens) public payable {
-        require(msg.value >= _tokenPrice, "CREDITS: invalid ether amount sent");
+        require(msg.value >= (_tokenPrice * numOfTokens), "CREDITS: invalid ether amount sent");
 
         _mint(msg.sender, numOfTokens);
 
     }
 
     // owner mint to address function to use for individual airdrops
-    function mintToAddress( address target, uint amount) public payable onlyOwner{
+    function mintToAddress(address target, uint amount) public payable onlyOwner{
         _mint(target, amount);
     }
 

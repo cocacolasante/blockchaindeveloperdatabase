@@ -12,9 +12,7 @@ const BuyCredits = () => {
                 console.log("error zero tokens")
                 return
             }
-
-            
-            purchaseTokens(tokensAmount)
+            await purchaseTokens(tokensAmount)
 
         }catch(err){
             console.log(err)

@@ -10,7 +10,6 @@ const fetchCreditsContract = (signerOrProvider) =>{
     return new ethers.Contract(CREDITS_ADDRESS, creditAbi.abi, signerOrProvider)
 }
 
-
 export const SmartContractContext = React.createContext();
 
 export const SmartContractProvider = ({children}) =>{
@@ -26,8 +25,6 @@ export const SmartContractProvider = ({children}) =>{
 
             const accounts = await window.ethereum.request({method: "eth_requestAccounts"})
             if(accounts.length){
-                
-    
                 setCurrentAccount(accounts[0]);
 
             }
@@ -48,9 +45,6 @@ export const SmartContractProvider = ({children}) =>{
                 const currentUser = accounts[0];
     
                 setCurrentAccount(currentUser);
-                
-
-                
 
             }
 
@@ -75,19 +69,20 @@ export const SmartContractProvider = ({children}) =>{
       
       const purchaseTokens = async (tokenamount) =>{
           try {
-            const purchaseAmount = ethers.parseUnits(tokenamount * tokenPrice).toString()
+            const purchaseAmount = (tokenamount * tokenPrice).toString()
 
 
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner()
             const contract = fetchCreditsContract(signer);
 
-            const tx = await contract.mintTokens(tokenamount.toString(), {value: purchaseAmount})
+            const tx = await contract.mintTokens(1, {value: purchaseAmount})
             const res = await tx.wait()
             if(res.status == 1) {
                 console.log("Success")
             }else {
                 console.log("Failed")
+                console.log("Transaction failed. Revert reason:", receipt.events[0]?.args?.message);
             }
         
         }catch(err){
@@ -104,14 +99,14 @@ export const SmartContractProvider = ({children}) =>{
 
     return (
         <SmartContractContext.Provider
-        value={({
-            connectToWallet,
-            checkIfWalletIsConnected,
-            currentAccount,
-            tokenPrice,
-            purchaseTokens
+            value={({
+                connectToWallet,
+                checkIfWalletIsConnected,
+                currentAccount,
+                tokenPrice,
+                purchaseTokens
 
-        })}
+            })}
         >{children}</SmartContractContext.Provider>
 
     )
