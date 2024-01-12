@@ -46,6 +46,7 @@ func (app *Application) writeJSON(w http.ResponseWriter, statusCode int, data in
 func (app *Application) ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
 	maxBytes := 1024 * 1024
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+	defer r.Body.Close()
 
 	dec := json.NewDecoder(r.Body)
 
@@ -233,4 +234,20 @@ func isValidEmail(email string) bool {
 	// This is a simple example and may not cover all edge cases
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return emailRegex.MatchString(email)
+}
+
+func (app *Application) VerifyApiKeyHeader(apikey, email string) (bool, error) {
+	if len(apikey) != 16 {
+		return false, errors.New("invalid api key length")
+	}
+	wallet, err := app.DB.AdminGetWalletAccountByEmail(email)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		
+		return false, err
+	}
+	app.InfoLog.Println("api key req", apikey)
+	app.InfoLog.Println("api key res", wallet.ApiKey)
+
+	return apikey == wallet.ApiKey, nil
 }

@@ -12,7 +12,10 @@ import (
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/tools"
 	"github.com/go-chi/chi/v5"
 )
-
+type ApiKeyRequest struct {
+    Email  string `json:"email"`
+    ApiKey string `json:"api_key"`
+}
 // CREATE A NEW WALLET ACCOUNT IN DATABASE
 func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -59,9 +62,8 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		app.ErrorJSON(w, err)
 		return
 	}
-	
+
 	input.ApiKey = apikey
-	
 
 	input.CreditsAvailable = big.NewInt(0)
 
@@ -75,7 +77,7 @@ func (app *Application) CreateWalletAccount(w http.ResponseWriter, r *http.Reque
 		app.ErrorJSON(w, err)
 		return
 	}
-	
+
 	err = app.Mailer.SendEmail(msg)
 	if err != nil {
 		app.ErrorLog.Println(err)
@@ -476,8 +478,6 @@ func (app *Application) APIKeyWithLogin(w http.ResponseWriter, r *http.Request) 
 	passHash := app.HashPassword(input.Password)
 
 	if existing.Password != passHash {
-		app.InfoLog.Println(existing.Password)
-		app.InfoLog.Println(input.Password)
 		app.ErrorJSON(w, errors.New("invalid login credentials"))
 		return
 	}
@@ -549,22 +549,20 @@ func (app *Application) ActivateAccount(w http.ResponseWriter, r *http.Request) 
 // LOGIN HANDLER SETTING COOKIE IN BROWSER
 func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid method", http.StatusBadRequest)
 		return
 	}
 
 	var input models.WalletAccount
-	err := app.ReadJSON(w, r, &input)
 
+	err := app.ReadJSON(w, r, &input)
 	if err != nil {
 		app.ErrorLog.Println(err)
 		app.ErrorJSON(w, err)
 		return
 	}
-
-	
 
 	validated := app.ValidateLogin(input)
 	if !validated {
@@ -596,16 +594,74 @@ func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 		Name:    "apikey",
 		Value:   existing.ApiKey, // update value to have a signed token in order to validate on frontend
 		MaxAge:  86400000000000,
-		Expires: time.Now().Add(time.Duration(24 *time.Hour)),
-		SameSite: http.SameSiteStrictMode,
-		Domain: app.Domain,
+		Expires: time.Now().Add(time.Duration(24 * time.Hour)),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
+	emaiCookie := http.Cookie{
+		Name:    "email",
+		Value:   existing.Email, // update value to have a signed token in order to validate on frontend
+		MaxAge:  86400000000000,
+		Expires: time.Now().Add(time.Duration(24 * time.Hour)),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
 		HttpOnly: true,
 	}
 
 	http.SetCookie(w, &cookie)
+	http.SetCookie(w, &emaiCookie)
 
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Set("Content-Type", "application")
 	w.Write(out)
 
+}
+
+func (app *Application) ValidateApiKey(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid method", http.StatusBadRequest)
+		return
+	}
+	r.ParseForm()
+
+	var input models.WalletAccount
+	err := app.ReadJSON(w, r, &input)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+	
+	app.InfoLog.Println("Email:", input.Email)
+	app.InfoLog.Println("ApiKey:", input.ApiKey)
+
+	
+	isValidApi, err := app.VerifyApiKeyHeader(input.ApiKey, input.Email)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+	if !isValidApi {
+		app.ErrorJSON(w, errors.New("apikey mismatch"))
+		return
+	}
+
+	var payload = struct {
+		Message string `json:"message"`
+		Matches bool   `json:"matches"`
+	}{
+		Message: "api key valid",
+		Matches: true,
+	}
+	out, err := json.Marshal(payload)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
 }

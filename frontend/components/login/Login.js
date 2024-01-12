@@ -32,11 +32,12 @@ const Login = () => {
             };
 
             let response = await fetch("http://localhost:8080/login", options)
-            console.log(response)
+            
             const data = await response.json()
-            console.log(data["api_key"])
+            
             if(data["api_key"]){
-                router.push("/home")
+                router.push("/")
+                router.reload()
             }else {
                 alert("login failed")
             }

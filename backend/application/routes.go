@@ -25,6 +25,11 @@ func (app *Application) Routes() http.Handler {
 	// get remaining credits
 	
 	mux.Post("/apikeywithemail", app.APIKeyWithLogin)
+
+	// validate apikey against database for frontend
+	mux.Post("/validatekey", app.ValidateApiKey)
+
+
 	// protected routes -uses api key
 	mux.Route("/{address}", func(muxx chi.Router) {
 		muxx.Use(app.authRequired)

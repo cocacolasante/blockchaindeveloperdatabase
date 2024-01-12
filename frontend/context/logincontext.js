@@ -1,7 +1,5 @@
-"use client";
-import React, {useState, useEffect, useContext} from "react";
 import { ethers } from "ethers";
-import { useCookies } from 'next-client-cookies';
+import { cookies } from 'next/headers'
 import { useRouter } from 'next/navigation'
 import creditAbi from "../utils/abi/credits.json"
 import {CREDITS_ADDRESS} from "../utils/addresses/addresses"
@@ -10,26 +8,17 @@ import {CREDITS_ADDRESS} from "../utils/addresses/addresses"
 export const LoginContext = React.createContext();
 
 export const LoginProvider = ({children}) =>{
-    const cookieStore = useCookies()
+    const cookieStore = cookies()
     
     const router = useRouter()
 
     const checkIfLoggedIn = () =>{
-        const auth = cookieStore.get("api_key")
+        const auth = cookieStore.get("apiKey")
         if(!auth){
             router.push("/login")
         }
 
     }
-
-    useEffect(()=>{
-
-        checkIfLoggedIn()
-    }, [])
-
-  
-
-
     return (
         <LoginContext.Provider
             value={({

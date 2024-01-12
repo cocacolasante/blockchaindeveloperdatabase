@@ -7,7 +7,7 @@ const WalletButton = () => {
 
     useEffect(()=>{
       
-      // checkIfLoggedIn()
+      checkIfWalletIsConnected()
   }, [currentAccount])
 
   return (
