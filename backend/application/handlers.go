@@ -548,12 +548,12 @@ func (app *Application) ActivateAccount(w http.ResponseWriter, r *http.Request) 
 
 // LOGIN HANDLER SETTING COOKIE IN BROWSER
 func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid method", http.StatusBadRequest)
 		return
 	}
-
-	// add in a password hash field
 
 	var input models.WalletAccount
 	err := app.ReadJSON(w, r, &input)
@@ -564,22 +564,20 @@ func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.Email == "" {
-		app.ErrorJSON(w, errors.New("empty email field"))
+	
+
+	validated := app.ValidateLogin(input)
+	if !validated {
+		app.ErrorJSON(w, errors.New("missing fields"))
 		return
 	}
-	if input.Password == "" {
-		app.ErrorJSON(w, errors.New("empty password field"))
-		return
-	}
+	passHash := app.HashPassword(input.Password)
 
 	existing, err := app.DB.AdminGetWalletAccountByEmail(input.Email)
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return
 	}
-
-	passHash := app.HashPassword(input.Password)
 
 	if existing.Password != passHash {
 		app.ErrorJSON(w, errors.New("invalid login credentials"))
@@ -598,7 +596,7 @@ func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 		Name:    "apikey",
 		Value:   existing.ApiKey,
 		MaxAge:  86400000000000,
-		Expires: time.Now().Add(86400000000000),
+		Expires: time.Now().Add(time.Duration(24 *time.Hour)),
 	}
 
 	http.SetCookie(w, &cookie)

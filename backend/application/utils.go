@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/cocacolasante/blockchaindeveloperdatabase/internal/models"
@@ -49,7 +50,7 @@ func (app *Application) ReadJSON(w http.ResponseWriter, r *http.Request, data in
 	dec := json.NewDecoder(r.Body)
 
 	dec.DisallowUnknownFields()
-	
+
 	err := dec.Decode(data)
 	if err != nil {
 		app.ErrorLog.Println("Unexpected data in request body:", err)
@@ -142,22 +143,21 @@ func (app *Application) VerifyHeaders(w http.ResponseWriter, r *http.Request) (b
 	token := headerParts[1]
 
 	id := chi.URLParam(r, "address")
-	
+
 	matches, err := app.CheckIfApiMatchesDatabase(id, token)
 	if err != nil {
 		return isVerified, err
 	}
-	if matches{
+	if matches {
 		isVerified = true
 	}
 
 	return isVerified, nil
 }
 
+func (app *Application) CheckIfApiMatchesDatabase(walletAddress, key string) (bool, error) {
+	wallet, err := app.DB.AdminGetWalletAccount(walletAddress)
 
-func(app *Application) CheckIfApiMatchesDatabase(walletAddress, key string) (bool, error) {
-	wallet, err := app.DB.AdminGetWalletAccount(walletAddress) 
-	
 	if err != nil {
 		return false, err
 	}
@@ -167,40 +167,70 @@ func(app *Application) CheckIfApiMatchesDatabase(walletAddress, key string) (boo
 	return true, nil
 }
 
-
-
-func(app *Application) VerifyURL(r *http.Request) (bool, error) {
+func (app *Application) VerifyURL(r *http.Request) (bool, error) {
 	walletAddress := chi.URLParam(r, "address")
 	reqKey := r.URL.Query().Get("key")
-	
-	wallet, err := app.DB.AdminGetWalletAccount(walletAddress) 
-		
+
+	wallet, err := app.DB.AdminGetWalletAccount(walletAddress)
+
 	if err != nil {
 		return false, err
 	}
-	
 
 	if wallet.ApiKey != reqKey {
 		return false, errors.New("invalid email auth")
 	}
-	
-	
+
 	return true, nil
 
 }
 
-
-func(app *Application) VerifyActive(r *http.Request) (bool, error){
+func (app *Application) VerifyActive(r *http.Request) (bool, error) {
 	walletAddress := chi.URLParam(r, "address")
-	wallet, err := app.DB.AdminGetWalletAccount(walletAddress) 
+	wallet, err := app.DB.AdminGetWalletAccount(walletAddress)
 	if err != nil {
 		return false, err
 	}
 
-	if !wallet.Active{
+	if !wallet.Active {
 		return false, errors.New("inactive account")
 	}
 
 	return true, nil
 }
 
+func (app *Application) ValidateLogin(in models.WalletAccount) bool {
+	var matches bool
+	email := in.Email
+	password := in.Password
+	app.InfoLog.Println(email)
+	app.InfoLog.Println(password)
+	if email == "" || password == "" {
+
+		return false
+	}
+	validEmail := isValidEmail(email)
+	if !validEmail {
+		return false
+	}
+	wallet, err := app.DB.AdminGetWalletAccountByEmail(email)
+	if err != nil {
+		return false
+	}
+
+	passHash := app.HashPassword(password)
+
+	if wallet.Email == email && wallet.Password == passHash {
+		matches = true
+	}
+
+	return matches
+
+}
+
+func isValidEmail(email string) bool {
+	// Use a regular expression to validate email format
+	// This is a simple example and may not cover all edge cases
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	return emailRegex.MatchString(email)
+}
