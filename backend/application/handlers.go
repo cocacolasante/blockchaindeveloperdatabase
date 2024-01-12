@@ -594,9 +594,12 @@ func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 
 	cookie := http.Cookie{
 		Name:    "apikey",
-		Value:   existing.ApiKey,
+		Value:   existing.ApiKey, // update value to have a signed token in order to validate on frontend
 		MaxAge:  86400000000000,
 		Expires: time.Now().Add(time.Duration(24 *time.Hour)),
+		SameSite: http.SameSiteStrictMode,
+		Domain: app.Domain,
+		HttpOnly: true,
 	}
 
 	http.SetCookie(w, &cookie)

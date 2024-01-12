@@ -1,7 +1,8 @@
 "use client";
 import React, {useState, useEffect, useContext} from "react";
 import { ethers } from "ethers";
-
+import { useCookies } from 'next-client-cookies';
+import { useRouter } from 'next/navigation'
 import creditAbi from "../utils/abi/credits.json"
 import {CREDITS_ADDRESS} from "../utils/addresses/addresses"
 
@@ -13,6 +14,9 @@ const fetchCreditsContract = (signerOrProvider) =>{
 export const SmartContractContext = React.createContext();
 
 export const SmartContractProvider = ({children}) =>{
+    // const cookieStore = useCookies()
+    
+    const router = useRouter()
     const [currentAccount, setCurrentAccount] = useState()
     const [tokenPrice, setTokenPrice] = useState()
 
@@ -55,9 +59,12 @@ export const SmartContractProvider = ({children}) =>{
 
     const getTokenPrice = async () => {
         try {
+            if(!window.ethereum){
+                return
+            }
           const provider = new ethers.BrowserProvider(window.ethereum);
           const contract = fetchCreditsContract(provider);
-      
+          console.log(contract)
           const creditPrice = await contract.tokenPrice();
           
             const parsed = ethers.formatEther(creditPrice)
@@ -67,34 +74,46 @@ export const SmartContractProvider = ({children}) =>{
         }
       };
       
-      const purchaseTokens = async (tokenamount) =>{
-          try {
-            const purchaseAmount = (tokenamount * tokenPrice).toString()
+    const purchaseTokens = async (tokenamount) =>{
+        try {
+        const purchaseAmount = (tokenamount * tokenPrice).toString()
 
 
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner()
-            const contract = fetchCreditsContract(signer);
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner()
+        const contract = fetchCreditsContract(signer);
 
-            const tx = await contract.mintTokens(1, {value: purchaseAmount})
-            const res = await tx.wait()
-            if(res.status == 1) {
-                console.log("Success")
-            }else {
-                console.log("Failed")
-                console.log("Transaction failed. Revert reason:", receipt.events[0]?.args?.message);
-            }
-        
-        }catch(err){
-            console.log(err)
+        const tx = await contract.mintTokens(tokenamount, {value: purchaseAmount})
+        const res = await tx.wait()
+        if(res.status == 1) {
+            console.log("Success")
+        }else {
+            console.log("Failed")
+            console.log("Transaction failed. Revert reason:", receipt.events[0]?.args?.message);
         }
-      }
+    
+    }catch(err){
+        console.log(err)
+    }
+    }
+
+    // const checkIfLoggedIn = () =>{
+    //     const auth = cookieStore.get("api_key")
+    //     if(!auth){
+    //         router.push("/login")
+    //     }
+
+    // }
 
     useEffect(()=>{
         checkIfWalletIsConnected();
-        getTokenPrice()
-       
+        // checkIfLoggedIn()
     }, [])
+
+    useEffect(()=>{
+    let price = getTokenPrice()
+    setTokenPrice(price)
+  }, [currentAccount])
 
 
     return (
@@ -103,8 +122,12 @@ export const SmartContractProvider = ({children}) =>{
                 connectToWallet,
                 checkIfWalletIsConnected,
                 currentAccount,
+                getTokenPrice,
+                purchaseTokens,
+                setTokenPrice,
                 tokenPrice,
-                purchaseTokens
+                checkIfWalletIsConnected
+                
 
             })}
         >{children}</SmartContractContext.Provider>

@@ -1,8 +1,9 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useContext } from "react"
+import { SmartContractContext } from "../../context/web3context"
 
 const Login = () => {
+    const {router} = useContext(SmartContractContext);
     const [emailInput, setEmailInput] = useState("")
     const [passwordInput, setPasswordInput] = useState("")
 
@@ -33,7 +34,12 @@ const Login = () => {
             let response = await fetch("http://localhost:8080/login", options)
             console.log(response)
             const data = await response.json()
-            console.log(data)
+            console.log(data["api_key"])
+            if(data["api_key"]){
+                router.push("/home")
+            }else {
+                alert("login failed")
+            }
         }catch(err){
             console.log(err)
             return

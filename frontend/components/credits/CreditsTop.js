@@ -1,11 +1,13 @@
 "use client"
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { SmartContractContext } from "../../context/web3context";
 import BuyCredits from "./BuyCredits";
 import styles from "./CreditTop.module.css"
 
 const CreditsTop = () => {
-  const { tokenPrice } = useContext(SmartContractContext);
+  const { getTokenPrice, tokenPrice, setTokenPrice, currentAccount } = useContext(SmartContractContext);
+
+
 
   return (
     <div className={styles.creditsTopContainer}>
