@@ -4,6 +4,8 @@ import Navbar from '../../components/navbar/Navbar'
 import Footer from "../../components/footer/Footer"
 import { validateLogin } from "../../actions/actions"
 import Login from "../../components/login/Login"
+
+
 export const metadata = {
   title: 'THE BLOCKCHAIN DEVELOPER DATABASE',
   description: 'The best place to store blockchain developers to store their deployed smart contract information',
@@ -19,24 +21,24 @@ export default async function RootLayout({ children }) {
     <html lang="en">
       <SmartContractProvider>
           <body >
+            <Navbar /> 
         {isValidated ? (
           <>
 
-            <Navbar /> 
             {children}
-            <Footer />
+           
           </>
          
         ) : (
           <>
-            <Navbar /> 
-            <Login /> 
              
-            <Footer />
+              <Login /> 
+             
           </>
         )}
+            <Footer />
           </body>
-
+        
       </SmartContractProvider>
     </html>
   )

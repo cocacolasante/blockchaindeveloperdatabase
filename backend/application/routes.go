@@ -30,6 +30,8 @@ func (app *Application) Routes() http.Handler {
 	mux.Post("/validatekey", app.ValidateApiKey)
 
 
+	mux.Get("/logout", app.Logout)
+
 	// protected routes -uses api key
 	mux.Route("/{address}", func(muxx chi.Router) {
 		muxx.Use(app.authRequired)

@@ -1,9 +1,10 @@
 "use client"
 import { useState, useContext } from "react"
 import { SmartContractContext } from "../../context/web3context"
+import { useRouter } from "next/navigation";
 
 const Login = () => {
-    const {router} = useContext(SmartContractContext);
+    const router = useRouter()
     const [emailInput, setEmailInput] = useState("")
     const [passwordInput, setPasswordInput] = useState("")
 
@@ -36,8 +37,7 @@ const Login = () => {
             const data = await response.json()
             
             if(data["api_key"]){
-                router.push("/")
-                router.reload()
+                router.push("/home")
             }else {
                 alert("login failed")
             }

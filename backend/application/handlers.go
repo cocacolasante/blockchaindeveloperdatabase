@@ -665,3 +665,44 @@ func (app *Application) ValidateApiKey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
 }
+func(app *Application) Logout(w http.ResponseWriter, r *http.Request){
+	cookie := http.Cookie{
+		Name:    "apikey",
+		Value:   "", // update value to have a signed token in order to validate on frontend
+		MaxAge:  -1,
+		Expires: time.Now(),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
+	emaiCookie := http.Cookie{
+		Name:    "email",
+		Value:   "", // update value to have a signed token in order to validate on frontend
+		MaxAge:  -1,
+		Expires: time.Now(),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
+
+	var payload = struct {
+		Message string `json:"message"`
+		LoggedOut bool `json:"logged_out"`
+
+	}{
+		Message: "successfully logged out",
+		LoggedOut: true,
+	}
+	out, err := json.Marshal(payload)
+	if err != nil {
+		app.ErrorLog.Println(err)
+		app.ErrorJSON(w, err)
+		return
+	}
+
+	http.SetCookie(w, &cookie)
+	http.SetCookie(w, &emaiCookie)
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(out)
+}
