@@ -488,6 +488,39 @@ func (app *Application) APIKeyWithLogin(w http.ResponseWriter, r *http.Request) 
 	// 	Expires: time.Now().Add(86400000000000),
 	// }
 
+	cookie := http.Cookie{
+		Name:    "apikey",
+		Value:   existing.ApiKey, // update value to have a signed token in order to validate on frontend
+		MaxAge:  86400000000000,
+		Expires: time.Now().Add(time.Duration(24 * time.Hour)),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
+	emaiCookie := http.Cookie{
+		Name:    "email",
+		Value:   existing.Email, // update value to have a signed token in order to validate on frontend
+		MaxAge:  86400000000000,
+		Expires: time.Now().Add(time.Duration(24 * time.Hour)),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
+	addressCookie := http.Cookie{
+		Name:    "useraddress",
+		Value:   existing.WalletAddress, // update value to have a signed token in order to validate on frontend
+		MaxAge:  86400000000000,
+		Expires: time.Now().Add(time.Duration(24 * time.Hour)),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, &addressCookie)
+	http.SetCookie(w, &cookie)
+	http.SetCookie(w, &emaiCookie)
+
+
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Set("Content-Type", "application")
 	w.Write(out)
@@ -599,7 +632,17 @@ func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 		Domain:   app.Domain,
 		HttpOnly: true,
 	}
+	addressCookie := http.Cookie{
+		Name:    "useraddress",
+		Value:   existing.WalletAddress, // update value to have a signed token in order to validate on frontend
+		MaxAge:  86400000000000,
+		Expires: time.Now().Add(time.Duration(24 * time.Hour)),
+		// SameSite: http.SameSiteStrictMode,
+		Domain:   app.Domain,
+		HttpOnly: true,
+	}
 
+	http.SetCookie(w, &addressCookie)
 	http.SetCookie(w, &cookie)
 	http.SetCookie(w, &emaiCookie)
 

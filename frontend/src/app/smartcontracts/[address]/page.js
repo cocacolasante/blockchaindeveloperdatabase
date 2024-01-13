@@ -1,10 +1,12 @@
 import React from 'react'
 import SmartContract from '../../../../components/smartcontracts/SmartContract'
 
-const page = () => {
+const page = (params) => {
+  console.log(params.params.address)
+
   return (
     <div>
-      <SmartContract />
+      <SmartContract contractaddress={params.params.address} />
     </div>
   )
 }

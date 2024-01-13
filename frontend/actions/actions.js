@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers';
-import { getWalletFromState } from './clientactions';
 
 export async function validateLogin() {
   
@@ -44,22 +43,27 @@ export async function checkApikeyToDatabase(apikey, email) {
 }
 
 
-export async function getSmartContract(contractAddress){
+export async function getSmartContract(contractAddress, apikey, userAddress){
+
     const reqOptions = {
         method: "GET",
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apikey}`
         }      
     };
-    const useraddress = getWalletFromState()
-    console.log(useraddress)
+   
+    
 
+// TEST URL
+// http://localhost:8080/0x11273F391609BF4C05CA23c6aD29D919a71dc37E/contract/0xD9A9431cA0FbC045B96F66fF01762D63E7E113be
 
-
-    const fetchUrl = `localhost:8080/${useraddress}/contract/${contractAddress}`
+    const fetchUrl = `http://localhost:8080/${userAddress}/contract/${contractAddress}`
+    console.log(fetchUrl)
     const response = await fetch(fetchUrl, reqOptions)
-    const data = await response.json()
 
+    const data = await response.json()
+    // console.log(data)
     return data
 
 }
@@ -68,9 +72,11 @@ export async function getCookies() {
     const cookieStore = cookies();
     const apikey = cookieStore.get("apikey");
     const email = cookieStore.get("email");
+    const address = cookieStore.get("useraddress");
 
     return {
         email,
-        apikey
+        apikey,
+        address
     }
 }
