@@ -37,7 +37,8 @@ const Login = () => {
             const data = await response.json()
             
             if(data["api_key"]){
-                router.push("/home")
+                router.push("/smartcontracts")
+                router.refresh()
             }else {
                 alert("login failed")
             }
@@ -49,6 +50,10 @@ const Login = () => {
 
 
   return (
+    <div>
+        <h1>THE BLOCKCHAIN DATABASE</h1>
+        <h4>Please login</h4>
+   
     <form onSubmit={handleLogin}>
         <label htmlFor="email" >Email:</label>
         <input onChange={e=>setEmailInput(e.target.value)} id="email" type="email" name='email'/> 
@@ -57,6 +62,7 @@ const Login = () => {
         <button type="submit" onClick={handleLogin} >Login</button>
         <button >Signup</button>
     </form>
+    </div>
   )
 }
 
