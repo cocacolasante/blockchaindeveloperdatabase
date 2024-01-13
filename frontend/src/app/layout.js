@@ -12,9 +12,8 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const valid = await getValidation()
-  console.log(valid)
+  
   if (!valid ){
-
     return (
     <html lang="en">
         <body>

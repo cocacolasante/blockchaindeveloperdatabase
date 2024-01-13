@@ -1,14 +1,12 @@
 "use client"
-import { useCookies } from 'next-client-cookies';
+import { useContext, useEffect } from "react";
+import { SmartContractContext } from "../../context/web3context"
 
-export async function logout() {
-    
-    const cookieStore = useCookies();
-    
-    cookieStore.set("apikey", "")
-    cookieStore.set("email", "")
+export async function getWalletFromState() {
+    const {currentAccount} = useContext(SmartContractContext);
 
-    console.log(cookieStore.get("apikey"))
-    console.log(cookieStore.get("email"))
+
+    return currentAccount
+
 
 }

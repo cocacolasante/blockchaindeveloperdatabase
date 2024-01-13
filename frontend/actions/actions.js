@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { getWalletFromState } from './clientactions';
 
 export async function validateLogin() {
   
@@ -42,3 +43,34 @@ export async function checkApikeyToDatabase(apikey, email) {
     return data.matches; // Assuming the server sends a boolean field named "matches"
 }
 
+
+export async function getSmartContract(contractAddress){
+    const reqOptions = {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+        }      
+    };
+    const useraddress = getWalletFromState()
+    console.log(useraddress)
+
+
+
+    const fetchUrl = `localhost:8080/${useraddress}/contract/${contractAddress}`
+    const response = await fetch(fetchUrl, reqOptions)
+    const data = await response.json()
+
+    return data
+
+}
+
+export async function getCookies() {
+    const cookieStore = cookies();
+    const apikey = cookieStore.get("apikey");
+    const email = cookieStore.get("email");
+
+    return {
+        email,
+        apikey
+    }
+}

@@ -1,8 +1,11 @@
 import React from 'react'
+import AddSmartcontract from '../../../../components/smartcontracts/AddSmartcontract'
 
 const page = () => {
   return (
-    <div>page</div>
+    <div>
+      <AddSmartcontract />
+    </div>
   )
 }
 

@@ -102,7 +102,6 @@ func (app *Application) GetWalletAccount(w http.ResponseWriter, r *http.Request)
 	}
 
 	address := chi.URLParam(r, "address")
-	app.InfoLog.Println(address)
 
 	wallet, err := app.DB.GetWalletByAddress(address)
 	if err != nil {
@@ -202,7 +201,6 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		app.ErrorJSON(w, errors.New("insufficient balance"))
 		return
 	}
-	app.InfoLog.Println("users balance:", balance)
 	// @todo DEBIT A CREDIT TOKEN BY CALLING REDEEM TOKEN FROM THE SMART CONTRACT AS AN ADMIN
 	err = app.Web3.RedeemCredits(id)
 	if err != nil {
@@ -246,7 +244,6 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 
 // GET SMART CONTRACT FROM DATABASE BY ADDRESS
 func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request) {
-	app.InfoLog.Println("hit in get contract")
 	if r.Method != http.MethodGet {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
@@ -256,7 +253,6 @@ func (app *Application) GetSmartContract(w http.ResponseWriter, r *http.Request)
 	if conAddress == "" {
 		app.ErrorJSON(w, errors.New("no contract address in url"))
 	}
-	app.InfoLog.Println("hit in get contract for address: " + conAddress)
 
 	smartContract, err := app.DB.GetSmartContract(conAddress)
 	if err != nil {
@@ -333,7 +329,6 @@ func (app *Application) UpdateSmartContract(w http.ResponseWriter, r *http.Reque
 
 // test @todo
 func (app *Application) DeleteSmartContract(w http.ResponseWriter, r *http.Request) {
-	app.InfoLog.Println("hit")
 	if r.Method != http.MethodDelete {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
@@ -370,7 +365,6 @@ func (app *Application) GetAllSmartContractAddressesByWallet(w http.ResponseWrit
 	}
 
 	userId := chi.URLParam(r, "address")
-	app.InfoLog.Println("user wallet:", userId)
 	contractAddresses, err := app.DB.GetAllSmartContractInWalletAccounts(userId)
 	if err != nil {
 		app.ErrorLog.Println(err)
@@ -395,7 +389,6 @@ func (app *Application) GetSmartContractFullByWallet(w http.ResponseWriter, r *h
 	}
 
 	userId := chi.URLParam(r, "address")
-	app.InfoLog.Println("user wallet:", userId)
 	contractAddresses, err := app.DB.GetAllFullScInWallet(userId)
 	if err != nil {
 		app.ErrorLog.Println(err)
@@ -508,7 +501,6 @@ func (app *Application) ActivateAccount(w http.ResponseWriter, r *http.Request) 
 	}
 	id := chi.URLParam(r, "address")
 
-	app.InfoLog.Println("handlers activate account", id)
 	err := app.DB.ActivateAccount(id)
 	if err != nil {
 		app.ErrorJSON(w, err)
@@ -588,7 +580,6 @@ func (app *Application) LoginWithEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.InfoLog.Println("existing from db", existing.ApiKey)
 
 	cookie := http.Cookie{
 		Name:    "apikey",
@@ -633,9 +624,6 @@ func (app *Application) ValidateApiKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	app.InfoLog.Println("Email:", input.Email)
-	app.InfoLog.Println("ApiKey:", input.ApiKey)
-
 	
 	isValidApi, err := app.VerifyApiKeyHeader(input.ApiKey, input.Email)
 	if err != nil {

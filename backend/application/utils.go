@@ -204,8 +204,6 @@ func (app *Application) ValidateLogin(in models.WalletAccount) bool {
 	var matches bool
 	email := in.Email
 	password := in.Password
-	app.InfoLog.Println(email)
-	app.InfoLog.Println(password)
 	if email == "" || password == "" {
 
 		return false
@@ -246,8 +244,6 @@ func (app *Application) VerifyApiKeyHeader(apikey, email string) (bool, error) {
 		
 		return false, err
 	}
-	app.InfoLog.Println("api key req", apikey)
-	app.InfoLog.Println("api key res", wallet.ApiKey)
 
 	return apikey == wallet.ApiKey, nil
 }
