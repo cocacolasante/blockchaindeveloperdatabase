@@ -20,6 +20,7 @@ const AddSmartcontract = () => {
     }
 
     try{ 
+      // @todo create fetch to backend to post add smart contract form
       const wallet = await fetch(`http://localhost:8080/${currentAccount}/`)
       // console.log(data)
 
