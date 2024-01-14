@@ -191,7 +191,7 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		return
 	}
 	id := chi.URLParam(r, "address")
-	// @todo MAKE CALL TO SMART CONTRACT TO VERIFY CREDITS WITH WALLET
+
 	balance, err := app.Web3.GetRemainingCredits(id)
 	if err != nil {
 		app.ErrorJSON(w, err)
@@ -199,12 +199,6 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 	}
 	if balance == big.NewInt(0) {
 		app.ErrorJSON(w, errors.New("insufficient balance"))
-		return
-	}
-	// @todo DEBIT A CREDIT TOKEN BY CALLING REDEEM TOKEN FROM THE SMART CONTRACT AS AN ADMIN
-	err = app.Web3.RedeemCredits(id)
-	if err != nil {
-		app.ErrorJSON(w, err)
 		return
 	}
 
@@ -217,6 +211,14 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 	if smartContract.DeployerWallet == "" {
 		smartContract.DeployerWallet = id
 	}
+
+	err = app.Web3.RedeemCredits(id)
+	if err != nil {
+		app.ErrorJSON(w, err)
+		return
+	}
+
+
 
 	err = app.DB.AddSmartContractToAccountDb(smartContract, id)
 

@@ -25,8 +25,7 @@ export async function checkApikeyToDatabase(apikey, email) {
     if(!apikey || !email ){
         return
     }
-    console.log(apikey)
-    console.log(email)
+   
     const reqOptions = {
         method: "POST",
         headers: {
@@ -59,7 +58,7 @@ export async function getSmartContract(contractAddress, apikey, userAddress){
 // http://localhost:8080/0x11273F391609BF4C05CA23c6aD29D919a71dc37E/contract/0xD9A9431cA0FbC045B96F66fF01762D63E7E113be
 
     const fetchUrl = `http://localhost:8080/${userAddress}/contract/${contractAddress}`
-    console.log(fetchUrl)
+    
     const response = await fetch(fetchUrl, reqOptions)
 
     const data = await response.json()
@@ -79,4 +78,43 @@ export async function getCookies() {
         apikey,
         address
     }
+}
+
+
+export async function getAllSmartContracts(){
+    const {email, apikey, address} = await getCookies()
+    const reqOptions = {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apikey.value}`
+        }      
+    };
+   
+    const url = `http://localhost:8080/${address.value}/fullcontracts`
+
+    const response = await fetch(url, reqOptions)
+    const data = await response.json()
+    return data
+}
+
+
+
+
+export async function addContract(name, contractAddress, deployer, description) {
+    const {email, apikey, address} = await getCookies()
+
+    const reqOptions = {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apikey.value}`
+        },
+        body: JSON.stringify({ "project_name": name, "address": contractAddress, "deployer_wallet": deployer, "description": description }),
+    };
+
+    const url = `http://localhost:8080/${address}/newcontract`
+    const response = await fetch(url, reqOptions)
+    const data = await response.json()
+    return data
 }

@@ -2,6 +2,7 @@
 import { useState, useContext } from "react"
 import { SmartContractContext } from "../../context/web3context"
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const Login = () => {
     const router = useRouter()
@@ -60,7 +61,7 @@ const Login = () => {
         <label htmlFor="password" >Password:</label>
         <input onChange={e=>setPasswordInput(e.target.value)} id="password" type="password" name='password' /> 
         <button type="submit" onClick={handleLogin} >Login</button>
-        <button >Signup</button>
+        <Link href={`/signup`}>Signup</Link>
     </form>
     </div>
   )

@@ -1,8 +1,23 @@
-import React from 'react'
+import { getAllSmartContracts } from "../../actions/actions"
+import SmartContractList from "../smartcontractcomponents/SmartContractList"
 
-const AllSmartContracts = () => {
+
+const AllSmartContracts = async () => {
+    const smartcontracts = await getAllSmartContracts()
+    
   return (
-    <div>AllSmartContracts</div>
+    <div>
+      <h1>All Smart Contracts</h1>
+      
+        {smartcontracts && smartcontracts.map((contract, i) =>{
+          return (
+            <div key={i}>
+              <SmartContractList address={contract.address} description={contract.description} name={contract.project_name} />
+            </div>
+          )
+        })}
+      
+    </div>
   )
 }
 
