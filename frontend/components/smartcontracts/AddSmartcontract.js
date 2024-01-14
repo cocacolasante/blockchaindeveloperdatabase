@@ -1,49 +1,35 @@
-"use client"
-import { useState } from "react"
-import { useContext, useEffect } from "react";
-import { SmartContractContext } from "../../context/web3context"
-
-
+import { addContract } from "../../actions/actions";
 
 const AddSmartcontract = () => {
-  const {currentAccount} = useContext(SmartContractContext);
+  const addSC = async (formData) => {
+    "use server";
 
-  const [address, setAddress] = useState()
-  const [deployer, setDeployer] = useState()
-  const [name, setName] = useState()
-  const [description, setDescription ] = useState()
+    const name = formData.get("name");
+    const address = formData.get("address");
+    const deployer = formData.get("deployer");
+    const description = formData.get("description");
 
-  const handleAddContract = async (e) =>{
-    e.preventDefault()
-    if(!address || !deployer || !name || !description){
-      return
-    }
+    // Validate the form data and save it to the database
 
-    try{ 
-      // @todo create fetch to backend to post add smart contract form
-      const wallet = await fetch(`http://localhost:8080/${currentAccount}/`)
-      // console.log(data)
+    console.log({ "project_name": name, "address": address, "deployer_wallet":deployer, "description":description });
+    const response = await addContract(name, address, deployer, description)
+    return response
+  };
 
-    }catch(err){
-      console.log(err)
-    }
-
-  }
+  // Form code
 
   return (
-    <div>
-      <form>
-        <label htmlFor="contractaddress" >Address:</label>
-        <input onChange={e=>setAddress(e.target.value)} id="address" type="text" name='address'/> 
-        <label htmlFor="name" >Name:</label>
-        <input onChange={e=>setName(e.target.value)} id="name" type="text" name='name' /> 
-        <label htmlFor="name" >Deployer:</label>
-        <input onChange={e=>setDeployer(e.target.value)} id="deployer" type="text" name='deployer' /> 
-        <label htmlFor="description" >description:</label>
-        <input onChange={e=>setDescription(e.target.value)} id="description" type="text" name='description' /> 
-        <button type="submit" onClick={handleAddContract} >Login</button>
+      <form method="POST" action={addSC} >
+          <label htmlFor="contractaddress" >Address:</label>
+          <input  id="address" type="text" name='address'/> 
+          <label htmlFor="name" >Name:</label>
+          <input  id="name" type="text" name='name' /> 
+          <label htmlFor="name" >Deployer:</label>
+          <input  id="deployer" type="text" name='deployer' /> 
+          <label htmlFor="description" >description:</label>
+          <input  id="description" type="text" name='description' /> 
+          <button type="submit"  >Add Contract</button>
       </form>
-    </div>
   )
 }
 

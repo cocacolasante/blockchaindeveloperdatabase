@@ -186,6 +186,7 @@ func (app *Application) GetAccountFromDatabase(w http.ResponseWriter, r *http.Re
 
 // ADD SMART CONTRACT ADDRESS TO WALLET ACCOUNT
 func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http.Request) {
+	app.InfoLog.Println("hit")
 	if r.Method != http.MethodPost {
 		app.ErrorJSON(w, errors.ErrUnsupported, http.StatusBadRequest)
 		return
@@ -212,6 +213,8 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		smartContract.DeployerWallet = id
 	}
 
+	app.InfoLog.Println(smartContract)
+
 	err = app.Web3.RedeemCredits(id)
 	if err != nil {
 		app.ErrorJSON(w, err)
@@ -221,7 +224,6 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 
 
 	err = app.DB.AddSmartContractToAccountDb(smartContract, id)
-
 	if err != nil {
 		app.ErrorJSON(w, err)
 		return

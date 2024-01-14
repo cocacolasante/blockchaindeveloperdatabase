@@ -1,3 +1,4 @@
+"use server"
 import { cookies } from 'next/headers';
 
 export async function validateLogin() {
@@ -103,7 +104,7 @@ export async function getAllSmartContracts(){
 
 export async function addContract(name, contractAddress, deployer, description) {
     const {email, apikey, address} = await getCookies()
-
+    
     const reqOptions = {
         method: "POST",
         headers: {
@@ -116,5 +117,8 @@ export async function addContract(name, contractAddress, deployer, description) 
     const url = `http://localhost:8080/${address}/newcontract`
     const response = await fetch(url, reqOptions)
     const data = await response.json()
+    console.log(data)
     return data
 }
+
+

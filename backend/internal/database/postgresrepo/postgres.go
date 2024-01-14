@@ -254,21 +254,20 @@ func (db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract,
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	stmt := `INSERT INTO smartcontracts (address, project_name, abi, deployer_wallet, description, state_variables) values($1, $2, $3, $4, $5,$6);`
+	stmt := `INSERT INTO smartcontracts (address, project_name, deployer_wallet, description) values($1, $2, $3, $4);`
 
-	_, err := db.Db.ExecContext(ctx, stmt, contract.Address, contract.ProjectName, contract.Abi, contract.DeployerWallet, contract.Description, contract.StateVariables)
+	_, err := db.Db.ExecContext(ctx, stmt, contract.Address, contract.ProjectName, contract.DeployerWallet, contract.Description)
 	if err != nil {
-		return err
+		return errors.New("error adding into smartcontracts: " + err.Error())
 	}
 
-	// @todo finish the insert query to insert sc address into the walletaccounts smart_contract_addresses array
 	stmt = `UPDATE walletaccounts
-	SET smart_contract_addresses = smart_contract_addresses || ARRAY[$1]
-	WHERE wallet_address = $2;`
+		SET smart_contract_addresses = smart_contract_addresses || ARRAY[$1]
+		WHERE wallet_address = $2;`
 
 	_, err = db.Db.ExecContext(ctx, stmt, contract.Address, id)
 	if err != nil {
-		return err
+		return errors.New("error adding into walletaccounts: " + err.Error())
 	}
 	return nil
 }
