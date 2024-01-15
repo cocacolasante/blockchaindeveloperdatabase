@@ -114,7 +114,7 @@ export async function addContract(name, contractAddress, deployer, description) 
         body: JSON.stringify({ "project_name": name, "address": contractAddress, "deployer_wallet": deployer, "description": description }),
     };
 
-    const url = `http://localhost:8080/${address}/newcontract`
+    const url = `http://localhost:8080/${address.value}/newcontract`
     const response = await fetch(url, reqOptions)
     const data = await response.json()
     console.log(data)

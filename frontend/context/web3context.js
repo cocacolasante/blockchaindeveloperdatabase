@@ -106,25 +106,13 @@ export const SmartContractProvider = ({children}) =>{
     
     }catch(err){
         console.log(err)
-    }
+        }
     }
 
-    const checkIfLoggedIn = () =>{
-        const allCookies = document.cookie;
-        console.log('All Cookies:', allCookies);
-  
-        const apiKey = Cookies.get('apikey');
-        console.log('API Key:', apiKey);
-      
-        // Check if the user is logged in using the API key
-        const isLoggedIn = Boolean(apiKey);
-        setLoggedIn(isLoggedIn);
 
-    }
 
     useEffect(()=>{
         checkIfWalletIsConnected();
-        checkIfLoggedIn();
       
     }, [])
  

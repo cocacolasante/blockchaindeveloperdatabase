@@ -25,12 +25,15 @@ func (m *PostgresDb) Connection() *sql.DB {
 func (db *PostgresDb) AddWalletToDb(wallet *models.WalletAccount) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
+	// @todo use lower case to add to db
+	// lowerWall := strings.ToLower(wallet.WalletAddress)
+	// lowerEmail := strings.ToLower(wallet.Email)
 
 	apikey := tools.GenerateApiKey()
 
 	stmt := `insert into walletaccounts (wallet_address, api_key, email, password, credits_available ) values ($1, $2, $3, $4, $5)`
 
-	_, err := db.Db.ExecContext(ctx, stmt, wallet.WalletAddress, apikey, wallet.Email, wallet.Password, wallet.CreditsAvailable)
+	_, err := db.Db.ExecContext(ctx, stmt, strings.ToLower(wallet.WalletAddress), apikey, strings.ToLower(wallet.Email), wallet.Password, wallet.CreditsAvailable)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -41,9 +44,11 @@ func (db *PostgresDb) AddWalletToDb(wallet *models.WalletAccount) (string, error
 }
 
 func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount, error) {
-	log.Println("db call hit")
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
+
+	// @todo make wallet address lowercase before searching
+	// lowerWall := strings.ToLower(address)
 
 	query := `SELECT wallet_address, credits_available, email 
 			FROM walletaccounts
@@ -51,7 +56,7 @@ func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount,
 
 	var wallet models.WalletAccount
 
-	err := db.Db.QueryRowContext(ctx, query, address).Scan(
+	err := db.Db.QueryRowContext(ctx, query, strings.ToLower(address)).Scan(
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
 		&wallet.Email,
@@ -70,6 +75,10 @@ func (db *PostgresDb) GetWalletByAddress(address string) (*models.WalletAccount,
 func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
+	
+	// @todo make wallet address lowercase before searching
+	// lowerWall := strings.ToLower(address)
+
 
 	query := ` SELECT
             wallet_address,
@@ -83,7 +92,7 @@ func (db *PostgresDb) AdminGetWalletAccount(address string) (*models.WalletAccou
 
 	var wallet models.WalletAccount
 	var smartContractsStr string
-	err := db.Db.QueryRowContext(ctx, query, address).Scan(
+	err := db.Db.QueryRowContext(ctx, query, strings.ToLower(address)).Scan(
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
 		&wallet.Email,
@@ -104,6 +113,10 @@ func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.Wallet
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
+		// @todo make wallet address lowercase before searching
+	// loweremail := strings.ToLower(email)
+
+
 	query := `SELECT
             wallet_address,
             credits_available,
@@ -117,7 +130,7 @@ func (db *PostgresDb) AdminGetWalletAccountByEmail(email string) (*models.Wallet
 
 	var wallet models.WalletAccount
 	var smartContractsStr string
-	err := db.Db.QueryRowContext(ctx, query, email).Scan(
+	err := db.Db.QueryRowContext(ctx, query, strings.ToLower(email)).Scan(
 		&wallet.WalletAddress,
 		&wallet.CreditsAvailable,
 		&wallet.Email,
@@ -160,7 +173,7 @@ func (db *PostgresDb) GetSmartContract(address string) (*models.SmartContract, e
 	var statevar any
 	query := `SELECT address, project_name, abi, deployer_wallet, description, state_variables FROM smartcontracts WHERE address = $1`
 
-	err := db.Db.QueryRowContext(ctx, query, address).Scan(
+	err := db.Db.QueryRowContext(ctx, query, strings.ToLower(address)).Scan(
 		&contract.Address,
 		&contract.ProjectName,
 		&contract.Abi,
@@ -185,7 +198,7 @@ func (db *PostgresDb) GetAllSmartContractInWalletAccounts(userAddress string) (*
 	var contracts []string
 
 	firstQuery := `SELECT smart_contract_addresses FROM walletaccounts WHERE wallet_address = $1`
-	rows, err := db.Db.QueryContext(ctx, firstQuery, userAddress)
+	rows, err := db.Db.QueryContext(ctx, firstQuery, strings.ToLower(userAddress))
 	if err != nil {
 		log.Println("query", err)
 		return nil, err
@@ -224,9 +237,9 @@ func (db *PostgresDb) GetAllFullScInWallet(userAddress string) (*[]models.SmartC
 	}
 	quotedAddresses := make([]string, len(*addresses))
     for i, address := range *addresses {
-        quotedAddresses[i] = "'" + address + "'"
+        quotedAddresses[i] = "'" + strings.ToLower(address) + "'"
     }
-	query := `SELECT address, project_name, abi, deployer_wallet, description FROM smartcontracts WHERE address IN (` + strings.Join(quotedAddresses, ",") + `);`
+	query := `SELECT address, project_name, abi, deployer_wallet, description FROM smartcontracts WHERE address IN (` + strings.Join((quotedAddresses), ",") + `);`
 	rows, err := db.Db.QueryContext(ctx, query)
 	if err != nil {
 		log.Println("query", err)
@@ -253,19 +266,19 @@ func (db *PostgresDb) GetAllFullScInWallet(userAddress string) (*[]models.SmartC
 func (db *PostgresDb) AddSmartContractToAccountDb(contract models.SmartContract, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
-
+	// @todo make all wallet addresses lower case prior to adding to db, - case sensitive is affecting exequery
 	stmt := `INSERT INTO smartcontracts (address, project_name, deployer_wallet, description) values($1, $2, $3, $4);`
 
-	_, err := db.Db.ExecContext(ctx, stmt, contract.Address, contract.ProjectName, contract.DeployerWallet, contract.Description)
+	_, err := db.Db.ExecContext(ctx, stmt, strings.ToLower(contract.Address), contract.ProjectName, strings.ToLower(contract.DeployerWallet), contract.Description)
 	if err != nil {
 		return errors.New("error adding into smartcontracts: " + err.Error())
 	}
-
+	
 	stmt = `UPDATE walletaccounts
 		SET smart_contract_addresses = smart_contract_addresses || ARRAY[$1]
 		WHERE wallet_address = $2;`
 
-	_, err = db.Db.ExecContext(ctx, stmt, contract.Address, id)
+	_, err = db.Db.ExecContext(ctx, stmt, strings.ToLower(contract.Address), strings.ToLower(id))
 	if err != nil {
 		return errors.New("error adding into walletaccounts: " + err.Error())
 	}
@@ -286,7 +299,7 @@ func (db *PostgresDb) UpdateSmartContractToAccountDb(updateAddress string, contr
         WHERE address = $1;
     `
 
-	_, err := db.Db.ExecContext(ctx, query, updateAddress, contract.ProjectName, contract.Abi, contract.Description, contract.StateVariables)
+	_, err := db.Db.ExecContext(ctx, query, strings.ToLower(updateAddress), contract.ProjectName, contract.Abi, contract.Description, contract.StateVariables)
 	if err != nil {
 		return err
 	}
@@ -299,7 +312,7 @@ func (db *PostgresDb) DeleteSmartContract(address, userAddress string) error {
 	defer cancel()
 
 	stmt := `delete from smartcontracts where address =$1;`
-	_, err := db.Db.ExecContext(ctx, stmt, address)
+	_, err := db.Db.ExecContext(ctx, stmt, strings.ToLower(address))
 	if err != nil {
 		return err
 	}
@@ -307,7 +320,7 @@ func (db *PostgresDb) DeleteSmartContract(address, userAddress string) error {
 		SET smart_contract_addresses = array_remove(smart_contract_addresses, $1)
 		WHERE wallet_address = $2;
 	`
-	_, err = db.Db.ExecContext(ctx, stmt, address, userAddress)
+	_, err = db.Db.ExecContext(ctx, stmt, address, strings.ToLower(userAddress))
 	if err != nil {
 		return err
 	}
@@ -322,7 +335,7 @@ func(db *PostgresDb) ActivateAccount(walletAddress string) (error){
 	stmt := `UPDATE walletaccounts
 			SET activated = $1
 			WHERE wallet_address = $2;`
-	_, err := db.Db.ExecContext(ctx, stmt, true, walletAddress)
+	_, err := db.Db.ExecContext(ctx, stmt, true, strings.ToLower(walletAddress))
 	if err != nil {
 		return err
 	}

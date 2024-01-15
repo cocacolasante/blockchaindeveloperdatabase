@@ -213,7 +213,10 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		smartContract.DeployerWallet = id
 	}
 
-	app.InfoLog.Println(smartContract)
+	app.InfoLog.Println(smartContract.Address)
+	app.InfoLog.Println(smartContract.DeployerWallet)
+	app.InfoLog.Println(smartContract.ProjectName)
+	app.InfoLog.Println(smartContract.Description)
 
 	err = app.Web3.RedeemCredits(id)
 	if err != nil {
@@ -560,7 +563,7 @@ func (app *Application) ActivateAccount(w http.ResponseWriter, r *http.Request) 
 		WalletAddress string `json:"wallet_address"`
 	}{
 		Message:       "Successfully Activated Account",
-		WalletAddress: id,
+		WalletAddress: wallet.WalletAddress,
 	}
 	out, err := json.Marshal(payload)
 	if err != nil {
@@ -700,6 +703,8 @@ func (app *Application) ValidateApiKey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(out)
 }
+
+
 func(app *Application) Logout(w http.ResponseWriter, r *http.Request){
 	cookie := http.Cookie{
 		Name:    "apikey",
