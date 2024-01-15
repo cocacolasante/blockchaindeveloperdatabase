@@ -1,9 +1,11 @@
 import { addContract } from "../../actions/actions";
 
 const AddSmartcontract = () => {
-  const addSC = async (formData) => {
+  const addSC = async (e) => {
     "use server";
+    e.preventDefault()
 
+    const formData = new FormData(e.target);
     const name = formData.get("name");
     const address = formData.get("address");
     const deployer = formData.get("deployer");
@@ -19,7 +21,7 @@ const AddSmartcontract = () => {
   // Form code
 
   return (
-      <form method="POST" action={addSC} >
+      <form method="POST" onSubmit={addSC} >
           <label htmlFor="contractaddress" >Address:</label>
           <input  id="address" type="text" name='address'/> 
           <label htmlFor="name" >Name:</label>

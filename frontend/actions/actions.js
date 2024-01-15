@@ -93,7 +93,7 @@ export async function getAllSmartContracts(){
     };
    
     const url = `http://localhost:8080/${address.value}/fullcontracts`
-
+    
     const response = await fetch(url, reqOptions)
     const data = await response.json()
     return data
@@ -117,7 +117,7 @@ export async function addContract(name, contractAddress, deployer, description) 
     const url = `http://localhost:8080/${address.value}/newcontract`
     const response = await fetch(url, reqOptions)
     const data = await response.json()
-    console.log(data)
+    
     return data
 }
 

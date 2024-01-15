@@ -38,7 +38,7 @@ const Login = () => {
             const data = await response.json()
             
             if(data["api_key"]){
-                router.push("/smartcontracts")
+                router.push("/")
                 router.refresh()
             }else {
                 alert("login failed")

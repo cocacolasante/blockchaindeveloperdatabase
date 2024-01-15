@@ -3,6 +3,7 @@ import Navbar from "../../components/navbar/Navbar";
 import Footer from "../../components/footer/Footer";
 import { validateLogin } from "../../actions/actions";
 import Login from "../../components/login/Login";
+import Signup from "../../components/signup/Signup";
 
 export const metadata = {
   title: "THE BLOCKCHAIN DEVELOPER DATABASE",
@@ -17,7 +18,12 @@ export default async function RootLayout({ children }) {
     return (
     <html lang="en">
         <body>
-          <Login />
+          <SmartContractProvider>
+          <Navbar />
+            <Login />
+
+            <Signup />
+          </SmartContractProvider>
         </body>
       </html>)
   }
