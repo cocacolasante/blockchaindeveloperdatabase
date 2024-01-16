@@ -64,10 +64,12 @@ func (w *Web3Connect) RedeemCredits(requestersAddress string) error {
 	wallet, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 	auth, err := bind.NewKeyedTransactorWithChainID(wallet, big.NewInt(CHAINID)) // Use ChainID 1 for the mainnet
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 
 	auth.GasPrice = big.NewInt(20000000000) // Replace with your preferred gas price
@@ -77,12 +79,14 @@ func (w *Web3Connect) RedeemCredits(requestersAddress string) error {
 	contractInstance, err := credits.NewCredits(contractAddress, w.Client)
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 
 	targetAddress := common.HexToAddress(requestersAddress)
 	tx, err := contractInstance.RedeemCredits(auth, targetAddress, big.NewInt(1))
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 
 	fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())

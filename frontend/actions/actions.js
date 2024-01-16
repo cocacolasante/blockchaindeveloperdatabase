@@ -102,8 +102,16 @@ export async function getAllSmartContracts(){
 
 
 
-export async function addContract(name, contractAddress, deployer, description) {
+export async function addContract(formData) {
     const {email, apikey, address} = await getCookies()
+    
+    
+    
+    // const formData = new FormData(e.target);
+    const name = formData.get("project_name");
+    const contractaddress = formData.get("address");
+    const deployer = formData.get("deployer_wallet");
+    const description = formData.get("description");
     
     const reqOptions = {
         method: "POST",
@@ -111,7 +119,7 @@ export async function addContract(name, contractAddress, deployer, description) 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apikey.value}`
         },
-        body: JSON.stringify({ "project_name": name, "address": contractAddress, "deployer_wallet": deployer, "description": description }),
+        body: JSON.stringify({ "project_name": name, "address": contractaddress, "deployer_wallet": deployer, "description": description }),
     };
 
     const url = `http://localhost:8080/${address.value}/newcontract`

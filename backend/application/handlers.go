@@ -213,10 +213,6 @@ func (app *Application) AddSmartContractToAccount(w http.ResponseWriter, r *http
 		smartContract.DeployerWallet = id
 	}
 
-	app.InfoLog.Println(smartContract.Address)
-	app.InfoLog.Println(smartContract.DeployerWallet)
-	app.InfoLog.Println(smartContract.ProjectName)
-	app.InfoLog.Println(smartContract.Description)
 
 	err = app.Web3.RedeemCredits(id)
 	if err != nil {
