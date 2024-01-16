@@ -99,9 +99,6 @@ export async function getAllSmartContracts(){
     return data
 }
 
-
-
-
 export async function addContract(formData) {
     const {email, apikey, address} = await getCookies()
     
@@ -129,4 +126,19 @@ export async function addContract(formData) {
     return data
 }
 
+export async function getUsersBalance(){
+    const {email, apikey, address} = await getCookies()
 
+    const reqOptions = {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apikey.value}`
+        },
+    };
+
+    const url = `http://localhost:8080/wallet/${address.value}`
+    const response = await fetch(url, reqOptions)
+    const data = await response.json()
+    return data
+}

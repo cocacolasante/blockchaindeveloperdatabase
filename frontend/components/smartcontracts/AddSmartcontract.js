@@ -2,7 +2,6 @@ import { addContract } from "../../actions/actions";
 
 
 const AddSmartcontract = () => {
-  // Form code
 
   return (
       <form method="POST" action={addContract} >

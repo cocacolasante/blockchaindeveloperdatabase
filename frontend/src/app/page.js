@@ -1,11 +1,11 @@
-import { validateLogin } from "../../actions/actions"
-
+import About from "../../components/about/About";
 
 export default function Home() {
   return (
     <div>
-     {console.log(validateLogin())}
-      <h1>THE BLOCKCHAIN DEVELOPER DATABASE</h1>
+
+      <h1>THE BLOCKCHAIN DEVELOPER DATABASE</h1>\
+      <About />
     </div>
   )
 }

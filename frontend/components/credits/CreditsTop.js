@@ -3,6 +3,7 @@ import React, { useContext, useEffect } from "react";
 import { SmartContractContext } from "../../context/web3context";
 import BuyCredits from "./BuyCredits";
 import styles from "./CreditTop.module.css"
+import UsersBalance from "./UsersBalance";
 
 const CreditsTop = () => {
   const { getTokenPrice, tokenPrice, setTokenPrice, currentAccount } = useContext(SmartContractContext);

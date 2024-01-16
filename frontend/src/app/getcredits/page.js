@@ -1,9 +1,10 @@
+import CreditsContainer from "../../../components/credits/CreditsContainer"
 import CreditsTop from "../../../components/credits/CreditsTop"
 
 const page = () => {
   return (
     <div>
-      <CreditsTop />
+      <CreditsContainer />
     </div>
   )
 }
