@@ -4,7 +4,7 @@
     display: flex;
     justify-content: space-between; /* Aligns items with space between them */
     padding: 10px; /* Add some padding for better spacing */
-    background-color: #333; /* Example background color for the navbar */
+    background-color: RGB(1, 10, 12); /* Example background color for the navbar */
   }
   
   .linksContainer {

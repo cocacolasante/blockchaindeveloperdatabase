@@ -1,7 +1,8 @@
+import styles from "./about.module.css"
 
 const About = () => {
   return (
-    <div>
+    <div className={styles.container}>
         <h1>About Us</h1>
         <div>
             <p>This is a database created in order to help blockchain developers store their contract addresses, deployer wallets and information about their smart contractaddress

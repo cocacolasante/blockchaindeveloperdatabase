@@ -4,6 +4,7 @@ import Footer from "../../components/footer/Footer";
 import { validateLogin } from "../../actions/actions";
 import Login from "../../components/login/Login";
 import Signup from "../../components/signup/Signup";
+import styles from "./global.css"
 
 export const metadata = {
   title: "THE BLOCKCHAIN DEVELOPER DATABASE",
@@ -17,7 +18,7 @@ export default async function RootLayout({ children }) {
   if (!valid ){
     return (
     <html lang="en">
-        <body>
+        <body className={styles.body}>
           <SmartContractProvider>
           <Navbar />
             <Login />

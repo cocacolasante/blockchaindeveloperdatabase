@@ -1,0 +1,13 @@
+/* .body{
+    background-image: url("../../public/aiblockchain.webp");
+} */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background-image: url("../../public/aiblockchain.webp");
+}
+
+* {
+    box-sizing: border-box;
+}

@@ -1,8 +1,8 @@
-import React from 'react'
+import styles from "./mission.module.css"
 
 const Mission = () => {
   return (
-    <div>
+    <div className={styles.container}>
         <h1>Our Mission</h1>
         <p>While there are a lot of CRM, Tools, and Databases to help developers store their code and information, but unfortunately in the Blockchain Space
             there is not a good solution to store smart contract address, abi's and deployer addresses... Until now!
